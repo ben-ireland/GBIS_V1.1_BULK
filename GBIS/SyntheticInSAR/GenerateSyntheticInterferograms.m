@@ -1,0 +1,404 @@
+function [unwrapped, wrapped, model] = GenSynthIFGs(Source, Geometry, Deformation, Stratified, Turbulent, Wrapped, Options)   
+% Ben Ireland, University of Bristol
+%   March 2023 - modified from scripts compiled by Pui Anantrasirichai
+%   https://github.com/pui-nantheera/Synthetic_InSAR_image
+
+% Script to generate individual sythetic interferograms with deformation
+% and/or stratified noise and/or turbulent noise
+
+% Paths to subfolders need to be generated before the script is run for the
+% first time e.g.
+% "(addpath(genpath('directory/Synthetic_InSAR_image-main-mod'));"
+
+% TO ADD:
+% 1. SAVING OF THE ORIGINAL PARAMETERS USED IN THE SYNTHETIC IFG
+clear all
+close all
+
+%Choose the elements for the synthetic interferogram
+Deformation = 1;
+Stratified_Noise = 0;
+Turbulent_Noise = 1;
+AddNugget = 0;
+
+Name = '';
+Name = input('Provide a unique identifier for these synthetic interferograms','s');
+
+SAVEWRAP = 1; %Optionally save preview image of wrapped interferograms
+wavelength = 0.055465;
+
+%CHANGE EACH RUN: Source type, heading and incidence angle, gap time (days), links
+%for the GACOS files, mask number and option, save directory, save name
+
+%ALL UNITS ARE IN RADIANS
+
+%% Deformation
+if Deformation == 1
+
+    %% SOURCE TYPE
+    
+    imageSize = 500; %Image resolution in pixels
+    Track = 1; % 1== ascending, 2== descending
+    MogiSize = 1; %0 == small, 1== shallow, 2==medium, 3==large
+    Source_Type = 4; %See below section for options
+    N = 1; %Number of peturbations (turbulent noise only)
+    
+    if Source_Type ==2
+        Volc = 'Fentale';
+    elseif Source_Type ==4
+        Volc = 'Suswa';
+    end
+    
+    % INPUT PARAMETERS
+    % Source_Type = 1. %Earthquakes
+    Quake.Strike = 0;              %strike in degrees
+    Quake.Dip = 80;                 %dip in degrees
+    Quake.Rake = -90;               %rake in degrees
+    Quake.Slip = 1;                 %magnitude of slip vector in metres
+    Quake.Top_depth = 3;           %depth (measured vertically) to top of fault in kilometres
+    Quake.Bottom_depth = 6;       %depth (measured vertically) to bottom of fault in kilometres
+    Quake.Length = 2;             %fault length in kilometres
+
+    % Source_Type = 2. Dykes
+    Dyke.Strike = 180-29;              %strike in degrees [0-180]
+    Dyke.Dip = 90;                  %dip in degrees (usually 90 or near 90) - not from GBIS
+    Dyke.Opening = 1.9;          %magnitude of opening (perpendincular to plane) in metres
+    Dyke.Mid_depth = 5.05;        %From GBIS -combine with dip angle to calc. top and bottom depth
+    Dyke.Top_depth = 2;            %depth (measured vertically) to top of dyke in kilometres
+    Dyke.Bottom_depth = 8.1;        %depth (measured vertically) to bottom of dyke in kilometres
+    Dyke.Length = 6.1;              %dyke length in kilometres
+
+    % Source_Type = 3. Rectangular Sills
+    Sill.Strike = 0;              %strike (orientation of Length dimension) in degrees [no different]
+    Sill.Dip = 0;                   %Dip in degrees (usually zero or near zero)
+    Sill.Opening = 10;             %magnitude of opening (perpendincular to plane) in metres
+    Sill.Depth = 5;              %depth (measured vertically) to top of dyke in kilometres
+    Sill.Width = 1;                %depth (measured vertically) to bottom of dyke in kilometres
+    Sill.Length = 1;               %dyke length in kilometres
+
+    % Source_Type = 4. Magma Chamber - point pressure
+    
+    if MogiSize ==2
+        %Medium
+        Mogi.Depth  = 4.923;                %Depth of Mogi Source
+        Mogi.Volume = 3.95*10^6;               %Volume in m^3
+    elseif MogiSize ==1
+        %Shallow
+        Mogi.Depth  = 3;
+%         Mogi.Depth  = 3.0341;                %Depth of Mogi Source
+        Mogi.Volume = 1.5*1e6;               %Volume in m^3
+    elseif MogiSize ==3
+        %Large
+        Mogi.Depth  = 4.923;                %Depth of Mogi Source
+        Mogi.Volume = 1.5*1e7;               %Volume in m^3
+    elseif MogiSize ==0
+        %Small
+        Mogi.Depth  = 4.923;
+        Mogi.Volume = 1.5*1e6;         
+    end
+    
+    % Source_Type = 5. Pressurized Penny-shaped Horizontal Crack (Fialko) - Sill
+    % Note, this is the slowest to calculate of the various sources
+
+    Penny.Depth  = 5;                %Depth of crack in km^3
+    Penny.Pressure = 1*1e6;         %Pressure of crack in Pa
+    Penny.Radius  = 5;               %Radius of crack in km^3
+
+    x=[-25000:100:25000-100];
+    y=[-25000:100:25000-100];
+
+    %% HEADING AND INCIDENCE
+    
+%     Heading = -11.387289; %Find from interferogram metadata - Fentale asc
+%     Incidence = 39.6550;
+%     Heading = -168.61745; %Find from interferogram metadata - Fentale dsc
+%     Incidence = 33.8941;
+if Track ==1
+     Heading = -12.1221; %Find from interferogram metadata - Suswa asc
+     Incidence = 39.5879;
+elseif Track ==2
+    Heading = -167.9484; %Find from interferogram metadata - Suswa dsc
+    Incidence = 33.7971;
+end
+    incidence = Incidence;
+
+    [los_grid_wrap, los_grid] = generateDeformation(Source_Type, x, y, Quake, Dyke, Sill, Mogi, Penny, Heading, Incidence);
+    los_grid = los_grid/0.028333*2*pi; %Convert to radians from m
+
+    figure()
+    imagesc(los_grid)%show unwrapped deformation (in radians)
+    axis image
+    Deform = 'def';
+else
+    los_grid = 0;
+    Deform = '';
+end
+
+% UNIT Conversions (requires deformation to be specified)
+m2rad = 4.*pi./wavelength;
+rad2m = (wavelength./(4.*pi));
+zen2los = 1./cos(incidence./180.*pi);
+
+%% Stratified noise
+if Stratified_Noise == 1
+
+    %input parameters
+% %     incidence=33.8941;
+%     xref  = 40.01; %Lon-lat reference areas - from interferogram metadata
+%     yref  = 8.78;
+%     dxref = 10;
+%     dyref = dxref;
+
+    
+    %% GAP TIME AND GACOS FILES
+    
+% days between 2 interferograms from Albino et al 2021.
+%     gaptime = 1896; %Fentale
+    gaptime = 1680; %Suswa
+    count = 0;
+    addind = 1;
+    %Files without the .ztd extension
+%     filename1 = '/Users/jl20461/Documents/BristolPhD/SyntheticInSAR/GACOS/Fentale_Binary/20230301T015045V5lbmhLgH/20141023';
+%     filename2 = '/Users/jl20461/Documents/BristolPhD/SyntheticInSAR/GACOS/Fentale_Binary/20230301T015045V5lbmhLgH/20200101';
+      filename1 = '/Users/jl20461/Documents/BristolPhD/SyntheticInSAR/GACOS/Suswa_Binary/20230201T232858VorTdEbPf/20150518';
+      filename2 = '/Users/jl20461/Documents/BristolPhD/SyntheticInSAR/GACOS/Suswa_Binary/20230201T232858VorTdEbPf/20191223';
+
+    [~,~,atmo1] = read_GACOS(filename1); %First image (binary images tasked from GACOS)
+    [~,~,atmo2] = read_GACOS(filename2); %Second image
+
+    atmo = (atmo2-atmo1).*zen2los.*m2rad;
+    atmo = imresize(atmo, [imageSize imageSize]);
+    mask = imerode(atmo~=0,strel('disk',3));
+    mask = mask(end:-1:1,:);
+    
+    % Compare GACOS signals
+    figure()
+    imagesc(atmo)
+    Strat = 'strat';
+else
+    Strat = '';
+    atmo = 0;
+end
+
+%% Turbulent noise
+if Turbulent_Noise == 1
+    
+    % input parameters
+    rows = 100;
+    cols = 100;
+    psizex = 1;
+    psizey = 1;
+    covmodel_type = 0; %0=exponential; 1=expcos; 2=ebessel
+    maxvar = 7.5; %maximum covariance (mm) (Sill)
+%     maxvar = 7.5/1000; %maximum covariance (mm) (Sill)
+    alpha = 0.008; %decay constant (range - mm^2)
+%     alpha = 5000; %decay constant (range - m)
+%     nugget = 0.005/1000; %nugget value (m^2)
+%     nugget = 0.005; %nugget value (mm^2)
+    %atm_pets = pcmc_atmNugget(rows,cols,maxvar,alpha,nugget,covmodel_type,N,psizex,psizey);
+    atm_pets = pcmc_atm(rows,cols,maxvar,alpha,covmodel_type,N,psizex,psizey);
+    for k = 1:N
+        curTur(:,:,k) = imresize(atm_pets(:,:,k),[imageSize imageSize]);
+        curTur(:,:,k) = m2rad.*(curTur(:,:,k)/1000);
+        RMSE(k) = (sqrt((sum((reshape(curTur(:,:,k),[],1).^2))/numel(curTur(:,:,k)))))*rad2m; %RMSE in m
+    end
+    
+    if N==1
+        figure()
+        imagesc(curTur)
+    end
+    Turb = 'tur';
+else
+    Turb = '';
+    curTur=0;
+end
+
+%% Combine signals
+if N>1
+    for k =1:N
+    combined(:,:,k) =los_grid + atmo + curTur(:,:,k);
+    end
+
+    %Add nugget noise
+    if AddNugget ==1
+%         %Load real interferogram to extract the noise map
+%         Suswa_Files = dir ('/Users/jl20461/Documents/BristolPhD/COMET_InSAR_Training_2022/140345_Sus/suswa_130A_09212_131313/timeseries/suswa_130A_09212_131313.nc');
+%         Suswa_Files = strcat(Suswa_Files.folder,'/',Suswa_Files.name);
+%         ncdisp (Suswa_Files);
+%         Suswa_LOS = ncread(Suswa_Files,'DATA');
+%         Suswa_LOS = Suswa_LOS(:,:,end);
+% 
+%         NoiseMap = Suswa_LOS - medfilt2(Suswa_LOS);
+% 
+%         figure()
+%         imagesc(NoiseMap)
+
+        NoiseMap = imnoise(combined(:,:,k),'gaussian',0,0.5);
+
+        combined(:,:,k) = combined(:,:,k) + NoiseMap;
+
+        figure()
+        imagesc(combined(:,:,k))
+        Nugget = 'Nug_G_05';
+    else
+        Nugget = '';
+    end
+else
+    combined = los_grid + atmo + curTur; 
+    figure()
+    imagesc(combined)
+
+    %Add nugget noise
+    if AddNugget ==1
+        %Load real interferogram to extract the noise map
+%         Suswa_Files = dir ('/Users/jl20461/Documents/BristolPhD/COMET_InSAR_Training_2022/140345_Sus/suswa_130A_09212_131313/timeseries/suswa_130A_09212_131313.nc');
+%         Suswa_Files = strcat(Suswa_Files.folder,'/',Suswa_Files.name);
+%         ncdisp (Suswa_Files);
+%         Suswa_LOS = ncread(Suswa_Files,'DATA');
+%         Suswa_LOS = Suswa_LOS(:,:,end);
+% 
+%         NoiseMap = Suswa_LOS - medfilt2(Suswa_LOS,[15 15]);
+
+% Try adding Gaussian noise of variance V to the image
+        NoiseMap = imnoise(combined,'gaussian',0,0.5);
+
+        figure()
+        imagesc(NoiseMap)
+
+        combined = combined + NoiseMap;
+
+        figure()
+        imagesc(combined)
+        Nugget = 'Nug_G_05';
+    else
+        Nugget = '';
+    end
+end
+
+
+%% CHANGE REFERENCE VALUE (optional)
+Change_Ref =1;
+if Change_Ref ==1
+    Reference_X = 195;  %Define reference coordinates - Suswa
+    Reference_Y = 415;
+    
+%     Reference_X = 150;  %Define reference coordinates - Fentale
+%     Reference_Y = 400;
+     if N>1
+         for k =1:N
+            combined(:,:,k) =combined(:,:,k) - combined(Reference_X,Reference_Y,k);
+         end
+    else   
+        combined = combined - combined(Reference_X,Reference_Y);
+        figure(7)
+        imagesc(combined)
+     end
+end
+
+%% OFFSET SIGNALS from 0,0
+%Need to verify that centre of deformation is not split between the different sides
+%of the image
+Offset_Signal =0;
+if Offset_Signal ==1
+    OffsetX = -100; %Offset amounts for x and y directions (in number of datapoints)
+    OffsetY = -100;
+    combined = circshift(combined,[OffsetX OffsetY]); %Shift array by specified number of elements in x and y
+    figure(9)
+    imagesc(combined)
+end
+
+%% Add a coherence mask (optional)
+Coherence_Mask =1;
+if Coherence_Mask ==1
+   %Load coherence mask from phase data from real S1 interferograms
+   TS_Files = dir ('/Users/jl20461/Documents/BristolPhD/COMET_InSAR_Training_2022/**/*.nc');
+   %% CHANGE NC FILE (for coherence mask)
+
+   for k = 6 %3 = Fentale, 6 = Suswa
+    TS_Filename{k} = strcat(TS_Files(k).folder,'/',TS_Files(k).name);
+    ncdisp (TS_Filename{k});
+    LOS_RealTS = ncread(TS_Filename{k},'DATA');
+    lat = ncread(TS_Filename{k},'lat');
+    lon = ncread(TS_Filename{k},'lon');
+    LOS_Real = LOS_RealTS(:,:,end);
+
+    Phase_Real = double((LOS_Real*(4*pi*cos(deg2rad(33.7971))))/wavelength);
+    Phase_Real = -1*Phase_Real;
+%     imagesc(lon,flip(lat),Phase_Real)
+    Co_Mask = (Phase_Real~=0);
+   end
+        if N>1
+         for k =1:N
+            combined(:,:,k) =combined(:,:,k).*Co_Mask;
+         end
+        else  
+            combined = combined.*Co_Mask;
+            figure(8)
+            imagesc(combined)
+        end
+end
+
+%% Save unwrapped signals
+curTur2 = curTur;
+combined2 = combined;
+for k = 1:N
+    if N>1
+        savedir = ['/Users/jl20461/Documents/BristolPhD/SyntheticInSAR/Synthetic_InSAR_image-main-mod/',Volc,'/ShallowTest1/',Deform,Strat,Turb,'/'];
+        mkdir(savedir)
+        imwrite(los_grid,[savedir,'los',Name,'.png']);
+        imwrite(atmo,[savedir,'atmo',Name,'.png']);
+        imwrite(curTur2(:,:,k),[savedir,'cur',Name,'.png']);
+        imwrite(combined2(:,:,k),[savedir,'combined',Name,'.png']);
+        save([savedir,'RMSE',Name,'.mat'],'RMSE');
+        combined = combined2(:,:,k);
+        curTur = curTur2(:,:,k);
+        save([savedir,'unwrapped_los','_',Volc,'_',Deform,'_',Strat,'_',Turb,'_',Nugget,'_',Name,num2str(k),'.mat'],'los_grid','atmo','curTur','combined');
+    else
+        savedir = ['/Users/jl20461/Documents/BristolPhD/SyntheticInSAR/Synthetic_InSAR_image-main-mod/',Volc,'/ShallowTest1/',Deform,Strat,Turb,'/'];
+        mkdir(savedir)
+        imwrite(los_grid,[savedir,'los',Name,'.png']);
+        imwrite(atmo,[savedir,'atmo',Name,'.png']);
+        imwrite(curTur,[savedir,'cur',Name,'.png']);
+        imwrite(combined,[savedir,'combined',Name,'.png']);
+        save([savedir,'RMSE',Name,'.mat'],'RMSE');
+         save([savedir,'unwrapped_los','_',Volc,'_',Deform,'_',Strat,'_',Turb,'_',Nugget,'_',Name,'.mat'],'los_grid','atmo','curTur','combined');
+    end
+end
+
+%% Plot and save wrapped images
+
+if SAVEWRAP == 1
+
+    if Deformation == 1
+        los_grid_wrap = wrapTo2Pi(los_grid)-pi;
+        los_grid_wrap = (los_grid_wrap-min(los_grid_wrap(:)))/range(los_grid_wrap(:));
+        figure (10)
+        imagesc(los_grid_wrap)
+    end
+    
+    if Stratified_Noise == 1 
+        atmo = wrapTo2Pi(atmo)-pi;
+        atmo = (atmo-min(atmo(:)))/range(atmo(:)).*mask;
+        figure(11)
+        imagesc(atmo)
+    end
+    
+    if Turbulent_Noise == 1 
+        curTur = wrapTo2Pi(curTur)-pi;
+        curTur = (curTur-min(curTur(:)))/range(curTur(:));
+        figure(12)
+        imagesc(curTur)
+    end
+    
+    combinedWrap = wrapTo2Pi(combined)-pi;
+    figure(13)
+    imagesc(combinedWrap)
+    colormap(jet)
+    title(['Volume (m^3): ',sprintf('%2e',Mogi.Volume),'      ',' Depth (km): ',num2str(Mogi.Depth)])
+    
+    imwrite(los_grid_wrap,[savedir,'los_wrap.png']);
+    imwrite(atmo,[savedir,'atmo_wrap.png']);
+    imwrite(curTur,[savedir,'curTur_wrap.png']);
+    imwrite(combinedWrap,[savedir,'combined_wrap.png']);
+    save([savedir,'wrapped_los','_',Volc,'_',Deform,'_',Strat,'_',Turb,'_',Nugget,'_',Name,'.mat'],'los_grid_wrap','atmo','curTur','combinedWrap');
+end

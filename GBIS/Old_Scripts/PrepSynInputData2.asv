@@ -1,0 +1,971 @@
+function [Filename, BoundingBox, FineBoundingBox, nObs_SS, nObs_Raw] = PrepSynInputData2(SynFiles,inputFileName,head,incidence,origin,SS,BB_Shape)
+%Ben Ireland, University of Bristol, March 2023
+%Function to prepare synthetic interferograms for ingestion into GBIS
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% INPUT VARIABLES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  SynFiles: Local path to .mat file containing synthetic interferogram
+%  matrix variable 'combined'
+%
+%  inputFileName: Local path to .inp (text) input file specifiying downsampling parameters
+%
+%  RemoveNull: 0== don't remove null values, 1== remove null values
+%
+%  head = heading angle associated with the synthetic interferogram
+%  (assumes one average value)
+%
+%  incidence = incidence angle associated with the synthetic interferogram
+%  (assumes one average value)
+%
+%  origin = coordinates (lat (deg), lon (deg), elevation (m)) of top left corner of the
+%  synthetic interferogram
+%
+%  SS = 'y' - subsample data; 'n' - don't subsample data (ignores options
+%  in the .inp file)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%% OUTPUT VARIABLES %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  loadedData: data structure containing lat, lon, phase, heading and incidence
+%  vectors in a format to ingest into GBIS
+%  
+%  nOBS_SS: number of data points after downsampling
+%
+%  nOBS_Raw: number of data points in original synthetic interferogram
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Create filepaths
+if ~exist([pwd,'/SyntheticIFGs/BoundingBoxes'],'dir')
+    mkdir([pwd,'/SyntheticIFGs'],'BoundingBoxes')
+    addpath([pwd,'/SyntheticIFGs/BoundingBoxes'])
+end
+
+%% Read input file
+inputFileID = fopen(inputFileName, 'r');
+textLine = fgetl(inputFileID); 
+
+while ischar(textLine)
+    eval(textLine)
+    textLine = fgetl(inputFileID);
+end
+
+fclose(inputFileID);
+  
+Avg_Mat = 1;
+%% Load sythetic interferograms
+Syn_Files = dir(SynFiles);
+Syn_Filename = strcat(Syn_Files.folder,'/',Syn_Files.name);
+SynData = load(Syn_Filename);
+
+name = Syn_Files.name(1:end-4);
+
+%Specify desired local grid spacing (m)
+xEast = (1:100:(length(SynData.combined)*100))-1;
+yNorth = xEast;
+zUP = zeros(size(SynData.combined));
+
+%Create matching georeferenced Lat and Lon grids
+[latS, lonS] = local2latlon(xEast,yNorth,zUP,origin);
+latS = latS';
+
+RAW_Phase = SynData.combined;
+
+%Flip phase upside-down (to do with how GBIS reads phase)
+% SynData.combined = flip(SynData.combined);
+%Take inverse of phase (to do with how GBIS converts phase to LOS)
+SynData.combined = -SynData.combined;
+
+Phase = SynData.combined;
+lon = lonS;
+lat = latS;
+
+%Find middle Lat and Lon Values
+MidLat = lat(size(lat,1)/2,size(lat,2)/2);
+MidLon = lon(size(lon,1)/2,size(lon,2)/2);
+
+%% Extract bounding boxes
+LatMax = max(lat(:));
+LatMin = min(lat(:));
+LonMax = max(lon(:));
+LonMin = min(lon(:));
+
+BoundingBox = [LonMin,LatMax,LonMax,LatMin];
+
+% Make polyshape from big bounding box (covering the full extent of the
+% image)
+BoundingBoxPoly = polyshape([BoundingBox(1) BoundingBox(1) BoundingBox(3)...
+    BoundingBox(3)],[BoundingBox(2) BoundingBox(4) BoundingBox(4)...
+    BoundingBox(2)]);
+
+nObs_Raw = numel(RAW_Phase);
+        
+%% Downsample LOS and Lat/Lon
+if SS == 'y'
+    %Extract fine downsampling box
+    numlevels = 5;
+    [FineBoundingBox, Image, OtsuFigure] = ExtractSignalBoundingBox(BB_Shape, RAW_Phase, numlevels, name);
+
+    OtsuGrayFilename = strcat(pwd,'/SyntheticIFGs/BoundingBox/',name,'GrayIfg','.png');
+    OtsuFigFilename = strcat(pwd,'/SyntheticIFGs/BoundingBox/',name,'OtsuFig','.png');
+    imwrite(uint8(Image),OtsuGrayFilename);
+    saveas(OtsuFigure,OtsuFigFilename);
+    %% ADDED - APPLY UNIFORM SAMPLING IF SPECIFIED
+    if geo.US == 1
+        SS_Style = ['uniform_',num2str(geo.US_Factor)];
+        if geo.SS_AVG ==0
+            Phase = Phase(1:US_Factor:end);
+            lat = lat(1:US_Factor:end);
+            lon = lon(1:US_Factor:end);
+
+        elseif geo.SS_AVG ==1
+            if Avg_Mat ==0
+                blockSize = [geo.US_Factor, geo.US_Factor];
+            elseif Avg_Mat ==1
+                blockSize = [sqrt(geo.US_Factor), sqrt(geo.US_Factor)];
+            end
+            meanFilterFunction = @(theBlockStructure) mean2(nonzeros(theBlockStructure.data(:)));
+
+            Phase = blockproc(Phase, blockSize, meanFilterFunction);
+            lon = blockproc(lon, blockSize, meanFilterFunction);
+            lat = blockproc(lat, blockSize, meanFilterFunction);
+
+            Phase = reshape(Phase,[],1);
+            lat = reshape(lat,[],1);
+            lon = reshape(lon,[],1);
+
+            loadedData.Phase = Phase;
+            loadedData.Lon = lon;
+            loadedData.Lat = lat;
+        end
+    end
+    %% ADDED - APPLY random DISTANCE-BASED COARSEFINE SUBSAMPLING BASED ON BOUNDING BOX IF SPECIFIED
+    if geo.BB ==3
+        %% Downsampling based on distance
+        % Define image dimensions
+        n = size(RAW_Phase, 1); % Number of rows
+        m = size(RAW_Phase, 2); % Number of columns
+        
+        % Define downsampling range
+        DSmin = geo.SS_FactorF; % Minimum downsampling factor
+        DSmax = geo.SS_Factor; % Maximum downsmapling factor
+        
+        % Unique identifier based on parameters
+        SS_Style = ['RanDist_',num2str(DSmin),'_',num2str(DSmax)];
+        
+        % Define area of interest coordinates
+        % Process lat and lon matricies
+        lon2 = lonS(1,:);
+        lat2 = latS(:,1);
+        
+        % Find closest match to AOI borders
+        differencesXmin = abs(lon2 - geo.FineSamplingBox(1));
+        differencesXmax = abs(lon2 - geo.FineSamplingBox(3));
+        differencesYmin = abs(lat2 - geo.FineSamplingBox(4));
+        differencesYmax = abs(lat2 - geo.FineSamplingBox(2));
+        
+        % Find corresponding indexes
+        [~,indexXmin] = min(differencesXmin);
+        [~,indexXmax] = min(differencesXmax);
+        [~,indexYmin] = min(differencesYmin);
+        [~,indexYmax] = min(differencesYmax);
+        
+        % Find indexes corresponding to values
+        
+        areaOfInterestX = [indexXmin, indexXmax]; % Define the x-range of the area of interest
+        areaOfInterestY = [indexYmin, indexYmax]; % Define the y-range of the area of interest
+        
+        % Create coordinate grids for x and y directions
+        [xGrid, yGrid] = meshgrid(1:m, 1:n);
+        
+        % Compute the Euclidean distance from each pixel to the area of interest
+        distances = pdist2([xGrid(:), yGrid(:)], [mean(areaOfInterestX), mean(areaOfInterestY)]);
+        
+        dist = reshape(distances,n,m);
+        
+        % Define downsampling factors based on the distance
+        downsamplingFactors = DSmin + (DSmax - DSmin) * (dist - min(dist(:))) / (max(dist(:)) - min(dist(:)));
+        
+        figure()
+        imagesc(downsamplingFactors)
+        
+        % Reshape downsamplingFactors matrix to the size of the original image
+        % downsamplingFactors = reshape(downsamplingFactors, n, m);
+        
+        % Initialize empty matrix for downsampled image
+        downsampledImg = NaN(n, m);
+        downsampledLocs = NaN(n, m);
+        
+        % Set zero phase values to NaN
+        Check_0 = Phase==0;
+        Phase(Check_0)=NaN;
+        
+        Phase = Phase'; % So the logical indexing assigns the correct phase values to each lat/lon coordinate
+        
+        % Iterate through each pixel and downsample
+        for i = 1:n
+            for j = 1:m
+                % Calculate downsampling factor for the current pixel
+                downsamplingFactor = downsamplingFactors(i,j);
+                
+                % Check if the pixel should be preserved based on the downsampling factor
+                if rand() <= 1 / downsamplingFactor
+                    % Get the corresponding area to average
+                    area = Phase(max(1, round(i/downsamplingFactor)) : min(n, round(i*downsamplingFactor)), ...
+                        max(1, round(j/downsamplingFactor)) : min(m, round(j*downsamplingFactor)));
+                    
+                    % Calculate the average value and location of the area
+                    downsampledPixel = mean(area(:),'omitnan');
+                    
+                    % Assign the downsampled pixel value to the corresponding position
+                    % in the downsampled image matrix
+                    downsampledImg(i, j) = downsampledPixel;
+                    
+                    % Mark the downsampling location
+                    downsampledLocs(i, j) = 1;
+                end
+            end
+        end
+        
+        % NEED TO FIX THE EDGE CASES?
+        
+        % Display the downsampled image
+        Check_NaN = isnan(downsampledImg);
+        downsampledLocs(Check_NaN)= NaN;
+        
+        figure()
+        imagesc(RAW_Phase)
+        
+        % Plot the downsampling locations
+        figure()
+        [xDownsampled, yDownsampled] = find(downsampledLocs > 0);
+        scatter(yDownsampled, xDownsampled, 'k', 'filled');
+        
+        hold off;
+        
+        
+        Null = ~isnan(downsampledImg);
+        downsampledImg = downsampledImg(Null);
+        
+        
+        %Convert downsampled x and y locations into Lat or Lon
+        Lon3 = zeros(length(xDownsampled),1);
+        Lat3 = zeros(length(xDownsampled),1);
+        
+        for x = 1:length(yDownsampled)
+            Lon3(x) = lon2(xDownsampled(x));
+            Lat3(x) = lat2(yDownsampled(x));
+        end
+        
+        figure()
+        scatter(Lon3,Lat3,50,downsampledImg,'filled','square')
+        clim([-0.1 0.1])
+        
+        loadedData.Lon = Lon3;
+        loadedData.Lat = Lat3;
+        loadedData.Phase = downsampledImg;
+    end
+    %% ADDED - APPLY systematic DISTANCE-BASED COARSEFINE SUBSAMPLING BASED ON BOUNDING BOX IF SPECIFIED
+    if geo.BB ==4
+        % Define image dimensions
+        n = size(RAW_Phase, 1); % Number of rows
+        m = size(RAW_Phase, 2); % Number of columns
+        
+        % Define downsampling range
+        DSmin = geo.SS_FactorF; % Minimum downsampling factor
+        DSmax = geo.SS_Factor; % Maximum downsmapling factor
+        numGroups = 5; % Number of levels of downsampling
+
+        SS_Style = ['SysDist_',num2str(DSmin),'_',num2str(DSmax),'_',num2str(numGroups)];
+        
+        % Define area of interest coordinates
+        % Process lat and lon matricies
+        lon2 = lonS(1,:);
+        lat2 = latS(:,1);
+        
+        % Find closest match to AOI borders
+        differencesXmin = abs(lon2 - geo.FineSamplingBox(1));
+        differencesXmax = abs(lon2 - geo.FineSamplingBox(3));
+        differencesYmin = abs(lat2 - geo.FineSamplingBox(4));
+        differencesYmax = abs(lat2 - geo.FineSamplingBox(2));
+        
+        % Find corresponding indexes
+        [~,indexXmin] = min(differencesXmin);
+        [~,indexXmax] = min(differencesXmax);
+        [~,indexYmin] = min(differencesYmin);
+        [~,indexYmax] = min(differencesYmax);
+        
+        % Find indexes corresponding to values
+        
+        areaOfInterestX = [indexXmin, indexXmax]; % Define the x-range of the area of interest
+        areaOfInterestY = [indexYmin, indexYmax]; % Define the y-range of the area of interest
+        
+        % Create coordinate grids for x and y directions
+        [xGrid, yGrid] = meshgrid(1:n, 1:m);
+        
+        % Compute the Euclidean distance from each pixel to the area of interest
+        distances = pdist2([xGrid(:), yGrid(:)], [mean(areaOfInterestX), mean(areaOfInterestY)]);
+        
+        dist = reshape(distances,n,m);
+        
+        % Determine the downsampling group for each pixel based on distance
+        groupIndices = ceil((numGroups - 1) * (dist - min(dist(:))) / (max(dist(:)) - min(dist(:)))) + 1;
+        
+        % Compute the downsampling factors for each group
+        downsamplingFactors = linspace(DSmin, DSmax, numGroups);
+        
+        % Make downsampling factors integers
+        downsamplingFactors = round(downsamplingFactors);
+        
+        % Display the downsampling groups
+        figure()
+        imagesc(groupIndices)
+        
+        % Initialize empty matrices for downsampled image and downsampling locations
+        % downsampledImg = (zeros(n, m)+9999);
+        downsampledImg = NaN(n, m);
+        downsampledLocs = NaN(n, m);
+        
+        % Set zero phase values to NaN
+        Check_0 = Phase==0;
+        Phase(Check_0)=NaN;
+        
+        Phase = Phase'; % So the logical indexing assigns the correct phase values to each lat/lon coordinate
+        
+        % Iterate through each pixel and downsample
+        for i = 1:n
+            for j = 1:m
+                % Calculate the downsampling factor for the current pixel based on the group index
+                groupIndex = groupIndices(i, j);
+                downsamplingFactor = downsamplingFactors(groupIndex);
+                
+                % Check if the pixel should be preserved based on the downsampling factor
+                if mod(i-1, downsamplingFactor) == 0 && mod(j-1, downsamplingFactor) == 0
+                    % Get the corresponding area to average
+                    area = Phase(i : min(i+downsamplingFactor-1, n), j : min(j+downsamplingFactor-1, m));
+                    
+                    % Calculate the average value and location of the area
+                    downsampledPixel = mean(area(:),'omitnan');
+                    
+                    % Assign the downsampled pixel value to the corresponding position
+                    % in the downsampled image matrix
+                    downsampledImg(i, j) = downsampledPixel;
+                    
+                    % Mark the downsampling location
+                    downsampledLocs(i, j) = 1;
+                end
+            end
+        end
+        
+        Check_NaN = isnan(downsampledImg);
+        downsampledLocs(Check_NaN)= NaN;
+        
+        % Display the original image
+        figure()
+        imagesc(RAW_Phase);
+        
+        % Plot the downsampling pixel locations
+        figure()
+        [xDownsampled, yDownsampled] = find(~isnan(downsampledLocs));
+        scatter(yDownsampled, xDownsampled, 'k', 'filled');
+        
+        hold off;
+        
+        Null = ~isnan(downsampledImg);
+        downsampledImg = downsampledImg(Null);
+        
+        %Convert downsampled x and y locations into Lat or Lon
+        Lon3 = zeros(length(xDownsampled),1);
+        Lat3 = zeros(length(yDownsampled),1);
+        
+        for x = 1:length(yDownsampled)
+            Lon3(x) = lon2(xDownsampled(x));
+            Lat3(x) = lat2(yDownsampled(x));
+        end
+        
+        
+        figure()
+        scatter(Lon3,Lat3,50,downsampledImg,'filled','square')
+        axis ij
+        
+        loadedData.Lon = Lon3;
+        loadedData.Lat = Lat3;
+        loadedData.Phase = downsampledImg;
+    end
+%% ADDED - APPLY COARSE/FINE Subsampling without averaging (NEW METHOD)
+    if geo.BB ==5
+        % Define image dimensions
+        n = size(Phase, 1); % Number of rows
+        m = size(Phase, 2); % Number of columns
+        
+        % Unique identifier based on parameters
+        SS_Style = ['BoundboxNew_',num2str(geo.SS_Factor),'_',num2str(geo.SS_FactorF)];
+        
+        % Process lat and lon matricies
+        lon2 = lonS(1,:);
+        lat2 = latS(:,1);
+        
+        fine_samp = (lon > geo.FineSamplingBox(1) & lon < geo.FineSamplingBox(3)) & ...
+             (lat < geo.FineSamplingBox(2) & lat > geo.FineSamplingBox(4));
+        
+        % Initialize empty matrices for downsampled image and downsampling locations
+        downsampledImg = NaN(n,m);
+        downsampledImgFine = NaN(n,m);
+        
+        downsampledLocs = NaN(n,m);
+        downsampledLocsFine = NaN(n,m);
+        
+        Phase = Phase'; % So the logical indexing assigns the correct phase values to each lat/lon coordinate
+        
+        % Iterate through each pixel and downsample
+        for i = 1:n
+            for j = 1:m
+                if mod(i,geo.SS_Factor) ==0 & mod(j,geo.SS_Factor) ==0
+                    downsampledLocs(i,j) = 1;
+                end
+                
+                if mod(i,geo.SS_FactorF) ==0 & mod(j,geo.SS_FactorF) ==0
+                    downsampledLocsFine(i,j) = 1;
+                end
+            end
+        end
+        
+        % Combine fine and coarse masks 
+        downsampledLocsFine(fine_samp~=1)=NaN;
+        downsampledLocs(fine_samp==1)=NaN;
+        
+        downsampledLocs(downsampledLocsFine==1)=1;
+        
+        % Apply mask to phase
+        downsampledImg(downsampledLocs==1)=Phase(downsampledLocs==1);
+        
+        % Find downsampled locations
+        [xDownsampled, yDownsampled] = find(~isnan(downsampledLocs));
+        
+        % Display the original image
+        figure()
+        imagesc(RAW_Phase);
+        hold on
+        scatter(yDownsampled, xDownsampled, 'w', 'filled');
+        hold off;
+        
+        Null = ~isnan(downsampledImg);
+        downsampledImg = downsampledImg(Null);
+        
+        %Convert downsampled x and y locations into Lat or Lon
+        Lon3 = zeros(length(xDownsampled),1);
+        Lat3 = zeros(length(yDownsampled),1);
+        
+        for x = 1:length(yDownsampled)
+            Lon3(x) = lon2(xDownsampled(x));
+            Lat3(x) = lat2(yDownsampled(x));
+        end
+        
+        figure()
+        scatter(Lon3,Lat3,50,downsampledImg,'filled','square')
+        axis ij
+        
+        loadedData.Lon = Lon3;
+        loadedData.Lat = Lat3;
+        loadedData.Phase = downsampledImg;
+    end
+
+    %% ADDED - APPLY COARSE/FINE Subsampling WITH averaging (NEW METHOD)
+    if geo.BB ==6
+        % Define image dimensions
+        n = size(Phase, 1); % Number of rows
+        m = size(Phase, 2); % Number of columns
+        
+        % Unique identifier based on parameters
+        SS_Style = ['BoundboxAvgNew_',num2str(geo.SS_Factor),'_',num2str(geo.SS_FactorF)];
+        
+        % Process lat and lon matricies
+        lon2 = lonS(1,:);
+        lat2 = latS(:,1);
+        
+        fine_samp = (lon > geo.FineSamplingBox(1) & lon < geo.FineSamplingBox(3)) & ...
+             (lat < geo.FineSamplingBox(2) & lat > geo.FineSamplingBox(4));
+        
+        % Initialize empty matrices for downsampled image and downsampling locations
+        downsampledImg = NaN(n,m);
+        downsampledImgFine = NaN(n,m);
+        
+        downsampledLocs = NaN(n,m);
+        downsampledLocsFine = NaN(n,m);
+        
+        Phase = Phase'; % So the logical indexing assigns the correct phase values to each lat/lon coordinate
+        
+        % Iterate through each pixel and downsample
+        for i = 1:n
+            for j = 1:m
+                if mod(i,geo.SS_Factor) ==0 & mod(j,geo.SS_Factor) ==0
+                    %Get values and indexes of area
+                    LonAvg = mean(lon2(i-(geo.SS_Factor-1):i));
+                    LatAvg = mean(lat2(j-(geo.SS_Factor-1):j));
+        
+                    LonIdx = round(mean([i-(geo.SS_Factor-1),i]));
+                    LatIdx = round(mean([j-(geo.SS_Factor-1),j]));
+        
+                    downsampledLocs(LonIdx,LatIdx) = 1;
+        
+                    %Get Phase values
+                    area = Phase(i-(geo.SS_Factor-1):i,j-(geo.SS_Factor-1):j);
+                    downsampledImg(LonIdx,LatIdx) = mean(nonzeros(area(:)));
+                end
+        
+                if mod(i,geo.SS_FactorF) ==0 & mod(j,geo.SS_FactorF) ==0
+                    %Get values and indexes of area
+                    LonAvg = mean(lon2(i-(geo.SS_FactorF-1):i));
+                    LatAvg = mean(lat2(j-(geo.SS_FactorF-1):j));
+        
+                    LonIdx = round(mean([i-(geo.SS_FactorF-1),i]));
+                    LatIdx = round(mean([j-(geo.SS_FactorF-1),j]));
+        
+                    downsampledLocsFine(LonIdx,LatIdx) = 1;
+        
+                    %Get Phase values
+                    area = Phase(i-(geo.SS_FactorF-1):i,j-(geo.SS_FactorF-1):j);
+                    downsampledImgFine(LonIdx,LatIdx) = mean(nonzeros(area(:)));
+                end
+            end
+        end
+        
+        downsampledLocsFine(fine_samp~=1)=NaN;
+        downsampledLocs(fine_samp==1)=NaN;
+        
+        downsampledImgFine(fine_samp~=1)=NaN;
+        downsampledImg(fine_samp==1)=NaN;
+        
+        downsampledLocs(downsampledLocsFine==1)=1;
+        downsampledImg(fine_samp==1)=downsampledImgFine(fine_samp==1);
+        
+        Check_NaN = isnan(downsampledImg);
+        downsampledLocs(Check_NaN)= NaN;
+        
+        % Find downsampled locations
+        [xDownsampled, yDownsampled] = find(~isnan(downsampledLocs));
+        
+        % Display the original image
+        figure()
+        imagesc(RAW_Phase);
+        hold on
+        scatter(yDownsampled, xDownsampled, 'w');
+        hold off;
+        
+        Null = ~isnan(downsampledImg);
+        downsampledImg = downsampledImg(Null);
+        
+        
+        %Convert downsampled x and y locations into Lat or Lon
+        Lon3 = zeros(length(xDownsampled),1);
+        Lat3 = zeros(length(yDownsampled),1);
+        
+        for x = 1:length(yDownsampled)
+            Lon3(x) = lon2(xDownsampled(x));
+            Lat3(x) = lat2(yDownsampled(x));
+        end
+        
+        figure()
+        scatter(Lon3,Lat3,50,downsampledImg,'filled','square')
+        axis ij
+        
+        loadedData.Lon = Lon3;
+        loadedData.Lat = Lat3;
+        loadedData.Phase = downsampledImg;
+    end
+
+    %% ADDED - APPLY COARSE/FINE Subsampling WITH averaging (NEW METHOD)
+    % Takes into account the coherence mask
+    if geo.BB ==7
+        % Define image dimensions
+        n = size(Phase, 1); % Number of rows
+        m = size(Phase, 2); % Number of columns
+        
+        % Unique identifier based on parameters
+        SS_Style = ['BoundboxAvgNewCo_',num2str(geo.SS_Factor),'_',num2str(geo.SS_FactorF)];
+        
+        % Process lat and lon matricies
+        lon2 = lonS(1,:);
+        lat2 = latS(:,1);
+        
+        fine_samp = (lon > geo.FineSamplingBox(1) & lon < geo.FineSamplingBox(3)) & ...
+             (lat < geo.FineSamplingBox(2) & lat > geo.FineSamplingBox(4));
+        
+        % Initialize empty matrices for downsampled image and downsampling locations
+        downsampledImg = NaN(n,m);
+        downsampledImgFine = NaN(n,m);
+        
+        downsampledLocs = NaN(n,m);
+        downsampledLocsFine = NaN(n,m);
+        
+        Phase = Phase'; % So the logical indexing assigns the correct phase values to each lat/lon coordinate
+        
+        % Set zero phase values to NaN
+        Check_0 = Phase==0;
+        Phase(Check_0)=NaN;
+        
+        % Iterate through each pixel and downsample
+        for i = 1:n
+            for j = 1:m
+                if mod(i,geo.SS_Factor) ==0 & mod(j,geo.SS_Factor) ==0
+                    %Get values and indexes of area
+                    LonAvg = mean(lon2(i-(geo.SS_Factor-1):i));
+                    LatAvg = mean(lat2(j-(geo.SS_Factor-1):j));
+        
+                    LonIdx = round(mean([i-(geo.SS_Factor-1),i]));
+                    LatIdx = round(mean([j-(geo.SS_Factor-1),j]));
+        
+                    downsampledLocs(LonIdx,LatIdx) = 1;
+        
+                    %Get Phase values
+                    area = Phase(i-(geo.SS_Factor-1):i,j-(geo.SS_Factor-1):j);
+                    downsampledImg(LonIdx,LatIdx) = mean(nonzeros(area(:)));
+                end
+        
+                if mod(i,geo.SS_FactorF) ==0 & mod(j,geo.SS_FactorF) ==0
+                    %Get values and indexes of area
+                    LonAvg = mean(lon2(i-(geo.SS_FactorF-1):i));
+                    LatAvg = mean(lat2(j-(geo.SS_FactorF-1):j));
+        
+                    LonIdx = round(mean([i-(geo.SS_FactorF-1),i]));
+                    LatIdx = round(mean([j-(geo.SS_FactorF-1),j]));
+        
+                    downsampledLocsFine(LonIdx,LatIdx) = 1;
+        
+                    %Get Phase values
+                    area = Phase(i-(geo.SS_FactorF-1):i,j-(geo.SS_FactorF-1):j);
+                    downsampledImgFine(LonIdx,LatIdx) = mean(nonzeros(area(:)));
+                end
+            end
+        end
+        
+        downsampledLocsFine(fine_samp~=1)=NaN;
+        downsampledLocs(fine_samp==1)=NaN;
+        
+        downsampledImgFine(fine_samp~=1)=NaN;
+        downsampledImg(fine_samp==1)=NaN;
+        
+        downsampledLocs(downsampledLocsFine==1)=1;
+        downsampledImg(fine_samp==1)=downsampledImgFine(fine_samp==1);
+        
+        Check_NaN = isnan(downsampledImg);
+        downsampledLocs(Check_NaN)= NaN;
+        
+        % Find downsampled locations
+        [xDownsampled, yDownsampled] = find(~isnan(downsampledLocs));
+        
+        % Display the original image
+        figure()
+        imagesc(RAW_Phase);
+        hold on
+        scatter(yDownsampled, xDownsampled, 'w', 'filled');
+        hold off;
+        
+        Null = ~isnan(downsampledImg);
+        downsampledImg = downsampledImg(Null);
+        
+        
+        %Convert downsampled x and y locations into Lat or Lon
+        Lon3 = zeros(length(xDownsampled),1);
+        Lat3 = zeros(length(yDownsampled),1);
+        
+        for x = 1:length(yDownsampled)
+            Lon3(x) = lon2(xDownsampled(x));
+            Lat3(x) = lat2(yDownsampled(x));
+        end
+        
+        figure()
+        scatter(Lon3,Lat3,50,downsampledImg,'filled','square')
+        axis ij
+        
+        loadedData.Lon = Lon3;
+        loadedData.Lat = Lat3;
+        loadedData.Phase = downsampledImg;
+    end
+
+    %% ADDED - APPLY COARSE/FINE Subsampling WITH averaging (NEW METHOD)
+    % Takes into account the coherence mask 
+    % WITH EDITABLE THRESHOLD FOR RETAINING DOWNSAMPLED PIXELS BASED ON PROPORTION OF NaN VALUES
+    if geo.BB ==8
+        %Define NaN threshold to keep or remove downsampled pixels
+        NaN_Threshold = 0.5;
+        
+        % Define image dimensions
+        n = size(Phase, 1); % Number of rows
+        m = size(Phase, 2); % Number of columns
+        
+        % Unique identifier based on parameters
+        SS_Style = ['BoundboxAvgNewCoThresh_',num2str(geo.SS_Factor),'_',num2str(geo.SS_FactorF),'_',num2str(NaN_Threshold)];
+        
+        % Process lat and lon matricies
+        lon2 = lonS(1,:);
+        lat2 = latS(:,1);
+        
+        fine_samp = (lon > geo.FineSamplingBox(1) & lon < geo.FineSamplingBox(3)) & ...
+             (lat < geo.FineSamplingBox(2) & lat > geo.FineSamplingBox(4));
+        
+        % Initialize empty matrices for downsampled image and downsampling locations
+        downsampledImg = NaN(n,m);
+        downsampledImgFine = NaN(n,m);
+        
+        downsampledLocs = NaN(n,m);
+        downsampledLocsFine = NaN(n,m);
+        
+        Phase = Phase'; % So the logical indexing assigns the correct phase values to each lat/lon coordinate
+        
+        % Iterate through each pixel and downsample
+        for i = 1:n
+            for j = 1:m
+                if mod(i,geo.SS_Factor) ==0 & mod(j,geo.SS_Factor) ==0
+                    %Get values and indexes of area
+                    LonAvg = mean(lon2(i-(geo.SS_Factor-1):i));
+                    LatAvg = mean(lat2(j-(geo.SS_Factor-1):j));
+        
+                    LonIdx = round(mean([i-(geo.SS_Factor-1),i]));
+                    LatIdx = round(mean([j-(geo.SS_Factor-1),j]));
+        
+                    downsampledLocs(LonIdx,LatIdx) = 1;
+        
+                    %Get Phase values
+                    area = Phase(i-(geo.SS_Factor-1):i,j-(geo.SS_Factor-1):j);
+        
+                    if nnz(area)/numel(area) > NaN_Threshold
+                        downsampledImg(LonIdx,LatIdx) = mean(nonzeros(area(:)));
+                    else
+                        downsampledImg(LonIdx,LatIdx) = NaN;
+                    end
+                end
+        
+                if mod(i,geo.SS_FactorF) ==0 & mod(j,geo.SS_FactorF) ==0
+                    %Get values and indexes of area
+                    LonAvg = mean(lon2(i-(geo.SS_FactorF-1):i));
+                    LatAvg = mean(lat2(j-(geo.SS_FactorF-1):j));
+        
+                    LonIdx = round(mean([i-(geo.SS_FactorF-1),i]));
+                    LatIdx = round(mean([j-(geo.SS_FactorF-1),j]));
+        
+                    downsampledLocsFine(LonIdx,LatIdx) = 1;
+        
+                    %Get Phase values
+                    area = Phase(i-(geo.SS_FactorF-1):i,j-(geo.SS_FactorF-1):j);
+        
+                    if nnz(area)/numel(area) > NaN_Threshold
+                        downsampledImgFine(LonIdx,LatIdx) = mean(nonzeros(area(:)));
+                    else
+                        downsampledImgFine(LonIdx,LatIdx) = NaN;
+                    end
+                end
+            end
+        end
+        
+        downsampledLocsFine(fine_samp~=1)=NaN;
+        downsampledLocs(fine_samp==1)=NaN;
+        
+        downsampledImgFine(fine_samp~=1)=NaN;
+        downsampledImg(fine_samp==1)=NaN;
+        
+        downsampledLocs(downsampledLocsFine==1)=1;
+        downsampledImg(fine_samp==1)=downsampledImgFine(fine_samp==1);
+        
+        Check_NaN = isnan(downsampledImg);
+        downsampledLocs(Check_NaN)= NaN;
+        
+        % Find downsampled locations
+        [xDownsampled, yDownsampled] = find(~isnan(downsampledLocs));
+        
+        Null = ~isnan(downsampledImg);
+        downsampledImg = downsampledImg(Null);
+        
+        % Display the original image
+        figure()
+        imagesc(RAW_Phase);
+        hold on
+        scatter(yDownsampled, xDownsampled, 'w');
+        hold off;
+        
+        %Convert downsampled x and y locations into Lat or Lon
+        Lon3 = zeros(length(xDownsampled),1);
+        Lat3 = zeros(length(yDownsampled),1);
+        
+        for x = 1:length(yDownsampled)
+            Lon3(x) = lon2(xDownsampled(x));
+            Lat3(x) = lat2(yDownsampled(x));
+        end
+        
+        figure()
+        scatter(Lon3,Lat3,50,downsampledImg,'filled','square')
+        axis ij
+        
+        loadedData.Lon = Lon3;
+        loadedData.Lat = Lat3;
+        loadedData.Phase = downsampledImg;
+    end
+    %% ADDED - APPLY COARSE/FINE SUBSAMPLING BASED ON BOUNDING BOX IF SPECIFIED
+    if geo.BB ==1 | geo.BB==2
+        SS_Style = ['boundbox_',num2str(geo.SS_Factor),'_',num2str(geo.SS_FactorF)];
+        FineSampLon = lon > geo.FineSamplingBox(1) & lon < geo.FineSamplingBox(3);
+        FineSampLat = lat < geo.FineSamplingBox(2) & lat > geo.FineSamplingBox(4);
+        FineSamp = FineSampLon & FineSampLat;
+
+        CoarseSamp = find(lon < geo.FineSamplingBox(1) | lon > geo.FineSamplingBox(3) | lat > geo.FineSamplingBox(2) | lat < geo.FineSamplingBox(4));
+        CoarseSampLog = ~FineSamp;
+        if sum(CoarseSampLog)>0
+
+            if geo.SS_AVG ==0
+                PhaseCoarse= downsample(Phase(CoarseSampLog),geo.SS_Factor);
+                LonCoarse  = downsample(lon(CoarseSampLog), geo.SS_Factor);
+                LatCoarse = downsample(lat(CoarseSampLog), geo.SS_Factor);
+            elseif geo.SS_AVG ==1
+
+                if Avg_Mat ==0
+                    blockSize = [geo.SS_Factor, geo.SS_Factor];
+                elseif Avg_Mat ==1
+                    blockSize = [sqrt(geo.SS_Factor), sqrt(geo.SS_Factor)];
+                end
+                blockSize = [geo.SS_Factor, geo.SS_Factor];
+                meanFilterFunction = @(theBlockStructure) mean2(nonzeros(theBlockStructure.data(:)));
+
+                PhaseCoarse = blockproc(Phase(CoarseSampLog), blockSize, meanFilterFunction);
+                LonCoarse  = blockproc(lon(CoarseSampLog), blockSize, meanFilterFunction);
+                LatCoarse = blockproc(lat(CoarseSampLog), blockSize, meanFilterFunction);
+            end            
+
+            if geo.BB==1
+                PhaseFine = Phase(FineSamp);
+                LatFine = lat(FineSamp);
+                LonFine = lon(FineSamp);
+            end
+
+            if geo.BB==2
+
+                if geo.SS_AVG ==0
+                    PhaseFine= downsample(Phase(FineSamp),geo.SS_FactorF);
+                    LatFine = downsample(lat(FineSamp),geo.SS_FactorF);
+                    LonFine = downsample(lon(FineSamp),geo.SS_FactorF);
+
+                elseif geo.SS_AVG ==1
+                    if Avg_Mat ==0
+                        blockSize = [geo.SS_FactorF, geo.SS_FactorF];
+                    elseif Avg_Mat ==1
+                        blockSize = [sqrt(geo.SS_FactorF), sqrt(geo.SS_FactorF)];
+                    end
+                    blockSize = [geo.SS_FactorF, geo.SS_FactorF];
+                    meanFilterFunction = @(theBlockStructure) mean2(nonzeros(theBlockStructure.data(:)));
+
+                    PhaseFine = blockproc(Phase(FineSamp), blockSize, meanFilterFunction);
+                    LatFine = blockproc(lat(FineSamp), blockSize, meanFilterFunction);
+                    LonFine = blockproc(lon(FineSamp), blockSize, meanFilterFunction);
+                end
+            end
+        end
+
+        [loadedData.Lon,Orig_Index] = sort(vertcat(LonCoarse,LonFine),'ascend');
+        loadedData.Lon = reshape(loadedData.Lon,[],1);
+
+        loadedData.Lat = vertcat(LatCoarse,LatFine);
+        loadedData.Lat = loadedData.Lat(Orig_Index);
+        loadedData.Lat = reshape(loadedData.Lat,[],1);
+
+        loadedData.Phase = vertcat(PhaseCoarse,PhaseFine);
+        loadedData.Phase = loadedData.Phase(Orig_Index);
+        loadedData.Phase = reshape(loadedData.Phase,[],1);
+    end
+    %% ADDED - APPLY COARSE/FINE SUBSAMPLING BASED ON Shapefile IF SPECIFIED
+    if geo.SHP >0
+        SS_Style = ['shapefile_',num2str(geo.SS_Factor),'_',num2str(geo.SS_FactorF)];
+        info = shapeinfo(geo.Shape_Path);
+        S = shaperead(geo.Shape_Path,'UseGeoCoords',true);
+        FineSamp = inpolygon(loadedData.Lon,loadedData.Lat,S.Lon,S.Lat);
+        CoarseSamp = ~FineSamp;
+
+        if sum(CoarseSamp)>0
+
+            if geo.SS_AVG ==0
+                PhaseCoarse= downsample(Phase(CoarseSamp),geo.SS_Factor);
+            elseif geo.SS_AVG ==1
+                blockSize = [geo.SS_Factor, geo.SS_Factor];
+                meanFilterFunction = @(theBlockStructure) mean2(nonzeros(theBlockStructure.data(:)));
+
+                PhaseCoarse = blockproc(Phase(CoarseSamp), blockSize, meanFilterFunction);
+            end
+
+             LatCoarse = downsample(lat(CoarseSamp),geo.SS_Factor);
+             LonCoarse = downsample(lon(CoarseSamp),geo.SS_Factor);
+
+            if geo.SHP==1
+                PhaseFine = Phase(FineSamp);
+                LatFine = lat(FineSamp);
+                LonFine = lon(FineSamp);
+            end
+
+            if geo.SHP==2
+
+                if geo.SS_AVG ==0
+                    PhaseFine= downsample(Phase(FineSamp),geo.SS_FactorF);
+                    LatFine = downsample(lat(FineSamp),geo.SS_FactorF);
+                    LonFine = downsample(lon(FineSamp),geo.SS_FactorF);
+
+                elseif geo.SS_AVG ==1
+                    blockSize = [geo.SS_FactorF, geo.SS_FactorF];
+                    meanFilterFunction = @(theBlockStructure) mean2(nonzeros(theBlockStructure.data(:)));
+
+                    PhaseFine = blockproc(Phase(FineSamp), blockSize, meanFilterFunction);
+                end
+             LatFine = downsample(lat(FineSamp),geo.SS_FactorF);
+             LonFine = downsample(lon(FineSamp),geo.SS_FactorF);
+            end
+        end
+
+        [loadedData.Lon,Orig_Index] = sort(vertcat(LonCoarse,LonFine),'ascend');
+        loadedData.Lat = vertcat(LatCoarse,LatFine);
+        loadedData.Lat = loadedData.Lat(Orig_Index);
+        loadedData.Phase = vertcat(PhaseCoarse,PhaseFine);
+        loadedData.Phase = loadedData.Phase(Orig_Index);
+    end
+%% No subsampling
+elseif SS == 'n'
+    loadedData.Lon = lon1;
+    loadedData.Lat = lat1;
+    Phase = reshape(Phase,[],1);
+    loadedData.Phase = Phase;
+
+    % Empty output variables
+    FineBoundingBox = [];
+    nObs_SS = [];
+
+    SS_Style = 'No_SS';
+else
+    error('Error. Please specify if the data should be subsampled using "y" (yes) or "n" (no)')
+end
+
+nObs_SS = length(loadedData.Lon);
+save([pwd,'/nObs/',name,'_',SS_Style,'_nOBS.mat'],'nObs_SS','nObs_Raw'); %Added
+%% Remove Null values
+%Find and remove zero or NaN values
+Null = (loadedData.Phase~=0) & ~isnan(loadedData.Phase) ;
+loadedData.Phase = loadedData.Phase(Null);
+loadedData.Lat = loadedData.Lat(Null);
+loadedData.Lon = loadedData.Lon(Null);
+
+%% Prepare final parts of input data
+
+%Create vectors of the heading and incidence angle
+loadedData.Heading = (zeros(size(loadedData.Phase)))+head; %TEST for plotting
+loadedData.Inc = (zeros(size(loadedData.Phase)))+incidence;
+
+%Write and save input file
+Lon = loadedData.Lon;
+Lat = loadedData.Lat;
+Phase = loadedData.Phase;
+Inc = loadedData.Inc;
+Heading = loadedData.Heading;
+
+%Find index of middle lat and lon
+[~, MidLati] = min(abs(Lat-MidLat));
+[~, MidLoni] = min(abs(Lon-MidLon));
+MidLatSS = Lat(MidLati);
+MidLonSS = Lon(MidLoni);
+
+
+Filename = strcat(pwd,'/InputData/',name,'_',SS_Style,'.mat');
+save(Filename,'Lon','Lat','Phase','Inc','Heading','MidLati','MidLoni','MidLat','MidLon');
+end

@@ -1,0 +1,16 @@
+range_samples:  501
+azimuth_lines:  501
+wavelength:     0.055465764662349676
+n_im_all:       95
+n_im:           94
+n_ifg_all:      298
+n_ifg:          274
+n_ifg_bad:      24
+n_unw_thre:     94
+ref_area:       463:464/289:290
+memory_size:    8000 MB
+n_patch:        1
+inv_alg:        LS
+gamma:          0.0001
+pixel_spacing_r: 108.30 m
+pixel_spacing_a: 110.95 m

@@ -1,0 +1,4 @@
+range_samples: 501
+azimuth_lines: 501
+radar_frequency: 5405000000.0 Hz
+center_time: 15:26:42.955491

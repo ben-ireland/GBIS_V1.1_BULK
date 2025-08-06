@@ -8,7 +8,7 @@ function OutputFilepaths = Step8_RunBulkInversion(InpFilePath,NumFrames,Options)
             InpFilePathSeed = strcat(InpFilePath(1:end-4),'_Seed.inp');
             disp('Seeding run for Mogi source')
             SeedFilepath = GBISrun(InpFilePathSeed,[1,2],'n','M',(Options.SeedingnRuns),Options.skipSimulatedAnnealing);
-
+            cd(startDir)
             InpFilePath = ProcessSeedingRun(InpFilePath,SeedFilepath,Options);
         end
         OutputFilepaths{1} = GBISrun(InpFilePath,[1,2],'n','M',(Options.nRuns),Options.skipSimulatedAnnealing);

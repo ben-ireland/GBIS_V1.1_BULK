@@ -427,11 +427,11 @@ function InpFilePath = Step7_PrepInputFile(inputFileName,outputFileName,FineBoun
         InpFilePath = modifyInpFile2(InpFilePath, outputFileName, 'modelInput.Ramp.upper', num2str(modelInput.Ramp.upper), num2str(Options.RampUpper), 'y',1);
     end
 
-    %% Save another input file to be used in a seeding run without an offset
+    %% Copy the input file to be used in a seeding run (optional)
     if Options.SeedingRun ==1
         outputFileNameSeed = strcat(InpFilePath(1:end-4),'_Seed.inp');
-        InpFilePathSeed = modifyInpFile2(InpFilePath, outputFileNameSeed, 'insar{insarID}.constOffset', insar{j}.constOffset,'n', 'n',j);
-        disp(['Seeding file saved to: ', InpFilePathSeed]);
+        copyfile(InpFilePath,outputFileNameSeed);
+        disp(['Seeding file saved to: ', outputFileNameSeed]);
     end
 
     disp(['File saved to: ', InpFilePath]);

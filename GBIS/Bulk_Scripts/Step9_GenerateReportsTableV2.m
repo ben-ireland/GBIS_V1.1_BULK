@@ -10,8 +10,8 @@ function FullTable = Step9_GenerateReportsTableV2(FullTable,OutputFilepath,NumFr
         Report = CreatePDF_Report(ReportFilePath,OutputFilepath{k},VolcNames,Opts{k});
 
         if length(OutputFilepath)>1 && k>1
-            disp('Comparing model fits using AIC')
-            [DeltaAIC(k), BestModel{k}] = CompareAIC_GBIS(OutputFilepath{1},OutputFilepath{k}); % Assumes first OutputFilePath is Mogi source. For other AIC measurements do manually?
+            disp('Comparing model fits using BIC')
+            [DeltaAIC(k), BestModel{k}] = CompareBIC_GBIS(OutputFilepath{1},OutputFilepath{k}); % Assumes first OutputFilePath is Mogi source. For other AIC measurements do manually?
         elseif length(OutputFilepath)==1 || k==1
             DeltaAIC(k) = NaN;
             BestModel{k} = 'NA';

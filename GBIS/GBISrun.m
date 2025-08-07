@@ -358,7 +358,6 @@ for i = 1:invpar.nModels
             invpar.model{i}='DIKE';    % Dipping dike dislocation (Okada)
         case 'F'
             invpar.model{i}='FAUL';    % Dipping fault dislocation (Okada)
-            
             % Custum made models
         case 'H'
             invpar.model{i}='HING';    % Two dikes hinged along L at depth (2x Okada)

@@ -17,9 +17,14 @@ function U = CDM_SymmetricSimple(m,obs,nu)
     ay2 = 2*ay;
     az2 = 2*az;
     opening = dv/(ax2*ay2+ax2*az2+ay2*az2);
-    
-    [ue,un,uv,DV]=CDM(X,Y,X0,Y0,depth,omegaX,omegaY,omegaZ,ax,ay,...
-    az,opening,nu);
-    
-    U = [ue';un';uv'];
+
+    Warn = 0;
+    if ax/depth>0.4 & Warn == 1
+        disp('CDM radius/depth>0.4 and may cause artefacts - this model will not contribute towards the deformation')
+        U = [zeros(size(obs,2),1)';zeros(size(obs,2),1)';zeros(size(obs,2),1)'];
+    else
+        [ue,un,uv,DV]=CDM(X,Y,X0,Y0,depth,omegaX,omegaY,omegaZ,ax,ay,...
+        az,opening,nu);
+        U = [ue';un';uv'];
+    end
 end

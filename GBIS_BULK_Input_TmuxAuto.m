@@ -139,7 +139,7 @@ Options.WavelengthM = 0.056; % Wavelength of the SAR sensor in m e.g. 0.056 m fo
 
 %Options.RunID = 'CDMsTest_WithLast'; % Unique identifier for the given run (e.g. VOLCANO_NAME_TEST)
 %Options.RunID = 'CDMsTest_FentaleLastOffsetV4';
-Options.RunID = 'AutoTest';
+Options.RunID = 'Auto_Last';
 Options.BulkRunID = '0408'; % Unique identifier for summary figures or tables of all runs (e.g. SOURCE_NAME_TEST_0101)
 
 %%%%%%%%%%%%%%% Optional Parameters %%%%%%%%%%%%%%%%%%%

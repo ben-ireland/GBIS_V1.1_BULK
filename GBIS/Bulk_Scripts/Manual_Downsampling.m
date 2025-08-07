@@ -65,7 +65,7 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
                         end
                     end
                     
-                    if NewSS_Factor >= (Options.Max_SS_FactorF + 1) && NewSS_Factor <Options.Max_SS_Factor
+                    if NewSS_Factor > (Options.Max_SS_FactorF) && NewSS_Factor <Options.Max_SS_Factor
                         if NewSS_Factor > NewSS_FactorF
                             if (nObs_SS_Coarse/nObs_SS_Fine)<Options.MinPropFF %nObs_SS_Coarse<100
                                 NewSS_Factor = NewSS_Factor - 1;
@@ -77,6 +77,9 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
                         else
                             NewSS_Factor = NewSS_Factor + 2;
                         end
+                    elseif NewSS_Factor <= (Options.Max_SS_FactorF) && (nObs_SS_Coarse/nObs_SS_Fine)<Options.MinPropFF && NewSS_Factor>NewSS_FactorF
+                        % Edge case where there isn't enough far-field points at Options.Max_SS_FactorF so NewSS_Factor needs lowering further
+                        NewSS_Factor = NewSS_Factor - 1;
                     end
                 end
                 % Unique identifier based on parameters

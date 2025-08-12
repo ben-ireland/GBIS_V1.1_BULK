@@ -146,8 +146,8 @@ function [DefImgMasked, DefImg] = ExtraFarFieldMask(TS_Files,DefImg,BoundingBox,
     box on
 
     if Options.IgnoreLastStep ==1
-        saveas(f,['/scratch/Ben/GBIS_BULK/FarfieldMasks/DEM_Mask_',TS_Files.name(1:end-3),'_',MaskMethod,'NoLast.png']);
+        saveas(f,[pwd,'/FarfieldMasks/DEM_Mask_',TS_Files.name(1:end-3),'_',MaskMethod,'NoLast.png']);
     elseif Options.IgnoreLastStep ==0
-        saveas(f,['/scratch/Ben/GBIS_BULK/FarfieldMasks/DEM_Mask_',TS_Files.name(1:end-3),'_',MaskMethod,'.png']);
+        saveas(f,[pwd,'/FarfieldMasks/DEM_Mask_',TS_Files.name(1:end-3),'_',MaskMethod,'.png']);
     end
 end

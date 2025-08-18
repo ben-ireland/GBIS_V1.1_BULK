@@ -17,9 +17,13 @@ function U = CDM_Dyke(m,obs,nu)
     ay2 = 2*ay;
     az2 = 2*az;
     opening = dv/(ax2*ay2+ax2*az2+ay2*az2);
-    
-    [ue,un,uv,DV]=CDM(X,Y,X0,Y0,depth,omegaX,omegaY,omegaZ,ax,ay,...
-    az,opening,nu);
-    
-    U = [ue';un';uv'];
+
+    Warn=1;
+    if Warn == 1 && ((ax>az && ax/opening< 1000) || (az>ax && az/opening< 1000) || ax/az<0.25) % ax/opening comes from Krumbholz et al. 2014 and ax/az ratio from 
+        U = [zeros(size(obs,2),1)';zeros(size(obs,2),1)';zeros(size(obs,2),1)'];
+    else
+        [ue,un,uv,DV]=CDM(X,Y,X0,Y0,depth,omegaX,omegaY,omegaZ,ax,ay,...
+        az,opening,nu);
+        U = [ue';un';uv'];
+    end
 end

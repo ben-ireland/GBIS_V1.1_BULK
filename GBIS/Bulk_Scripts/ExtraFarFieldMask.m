@@ -88,6 +88,9 @@ function [DefImgMasked, DefImg] = ExtraFarFieldMask(TS_Files,DefImg,BoundingBox,
     set(gca,'YDir','reverse')
     %l = legend('Location','eastoutside');
     title('Input deformation image')
+    if Options.FarFieldMaskMethod ==1 || Options.FarFieldMaskMethod == 3
+        subtitle(['Elev. bounds: ',num2str(round(MinElev)),'|',num2str(round(MaxElev)),' m']);
+    end
     set(gca,'XTick',[]);
     set(gca,'YTick',[]);
     set(gca,'FontSize',8);

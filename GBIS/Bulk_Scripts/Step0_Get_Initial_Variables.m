@@ -151,10 +151,27 @@ if endsWith(TS_Files.name,'.nc')
         LOS = LOS(:,:,Options.CropTS_start:Options.CropTS_end);
         days = days(Options.CropTS_start:Options.CropTS_end);
     else
-        if Options.IgnoreLastStep ==1
-            LastStep = LOS(:,:,end-1) - LOS(:,:,2);
+        if Options.AutoTimestep~=1
+            if Options.IgnoreLastStep ==1
+                LastStep = LOS(:,:,end-1) - LOS(:,:,2);
+            else
+                LastStep = LOS(:,:,end);
+            end
         else
-            LastStep = LOS(:,:,end);
+            Norm = LOS(:,:,end);
+            Norm2 = LOS(:,:,end) - LOS(:,:,2);
+            Norm = RemoveGVPVolcsStep0(Norm, lat, lon, Options);
+            Norm2 = RemoveGVPVolcsStep0(Norm2, lat, lon, Options);
+            Std1 = std(Norm(:),'omitnan');
+            Std2 = std(Norm2(:),'omitnan');
+
+            if Std1>Std2
+                LastStep = LOS(:,:,end-1) - LOS(:,:,2);
+                Options.IgnoreLastStep =1;
+            else
+                LastStep = LOS(:,:,end);
+                Options.IgnoreLastStep =0;
+            end
         end
     end
 
@@ -220,20 +237,32 @@ elseif endsWith(TS_Files.name, '.h5')
     LOS = LOS./1000; % Convert LOS from mm to m
 
     if Options.CropTS == 1
-        if Options.CropTS_start ==1 && Options.CropTS_end ==length(days)
+        LastStep = LOS(:,:,Options.CropTS_end) - LOS(:,:,Options.CropTS_start);
+        LOS = LOS(:,:,Options.CropTS_start:Options.CropTS_end);
+        days = days(Options.CropTS_start:Options.CropTS_end);
+    else
+        if Options.AutoTimestep~=1
             if Options.IgnoreLastStep ==1
-                LastStep = LOS(:,:,end-1) - LOS(:,:,2); % Crop the first and last timeseries step to reduce noise when there is not a sigmoidal trend
+                LastStep = LOS(:,:,end-1) - LOS(:,:,2);
             else
                 LastStep = LOS(:,:,end);
             end
-
         else
-            LastStep = LOS(:,:,Options.CropTS_end) - LOS(:,:,Options.CropTS_start);
-            LOS = LOS(:,:,Options.CropTS_start:Options.CropTS_end);
-            days = days(Options.CropTS_start:Options.CropTS_end);
+            Norm = LOS(:,:,end);
+            Norm2 = LOS(:,:,end) - LOS(:,:,2);
+            Norm = RemoveGVPVolcsStep0(Norm, lat, lon, Options);
+            Norm2 = RemoveGVPVolcsStep0(Norm2, lat, lon, Options);
+            Std1 = std(Norm(:),'omitnan');
+            Std2 = std(Norm2(:),'omitnan');
+
+            if Std1>Std2
+                LastStep = LOS(:,:,end-1) - LOS(:,:,2);
+                Options.IgnoreLastStep =1;
+            else
+                LastStep = LOS(:,:,end);
+                Options.IgnoreLastStep =0;
+            end
         end
-    else
-        LastStep = LOS(:,:,end-1) - LOS(:,:,2);
     end
 
     if Options.CropImg == 1

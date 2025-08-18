@@ -79,40 +79,41 @@ clc; clear all; close all
 %%%%%%%%%%%% FOR TMUX-BASED JOB SPLITTING %%%%%%%%%%%  
 args = getenv('GROUP_IDX'); % Get which group of files is being used
 group_idx = str2double(args);
-switch group_idx
-    case 1
-        file_indices = 1:2;
-    case 2
-        file_indices = 3;
-    case 3
-        file_indices = 4;
-    case 4
-        file_indices = 5;
-    case 5
-        file_indices = 6:7;
-    case 6
-        file_indices = 8:9;
-    case 7
-        file_indices = 10;
-    case 8
-        file_indices = 11:12;
-    case 9
-        file_indices = 13;
-    case 10
-        file_indices = 14;
-    case 11
-        file_indices = 15:16;
-    case 12
-        file_indices = 17:18;
-    case 13
-        file_indices = 19;
-    case 14
-        file_indices = 20;
-    case 15
-        file_indices = 21:22;
-    case 16
-        file_indices = 23;
-end
+% file_indices = 1:23;
+% switch group_idx
+%     case 1
+%         file_indices = 1:2;
+%     case 2
+%         file_indices = 3;
+%     case 3
+%         file_indices = 4;
+%     case 4
+%         file_indices = 5;
+%     case 5
+%         file_indices = 6:7;
+%     case 6
+%         file_indices = 8:9;
+%     case 7
+%         file_indices = 10;
+%     case 8
+%         file_indices = 11:12;
+%     case 9
+%         file_indices = 13;
+%     case 10
+%         file_indices = 14;
+%     case 11
+%         file_indices = 15:16;
+%     case 12
+%         file_indices = 17:18;
+%     case 13
+%         file_indices = 19;
+%     case 14
+%         file_indices = 20;
+%     case 15
+%         file_indices = 21:22;
+%     case 16
+%         file_indices = 23;
+% end
 %%%%%%%%%%%%%%%% INPUT YOUR DATA HERE %%%%%%%%%%%%%%%
 %% Add input files and bulk InSAR data
 input_Filename = 'Generic_Input_File'; % Without .inp extension
@@ -122,7 +123,6 @@ input_Filename = 'Generic_Input_File'; % Without .inp extension
 %TS_Files = dir([pwd,'/SampleData','/**/timeseries/*.nc']); % .nc example (comment out as necessary)
 %TS_Files = dir([pwd,'/SampleData','/**/TS_GEOCml1*/cum_filt.h5']); % .h5 example
 TS_Files = dir(['/scratch/Ben/EAR_Data/**/timeseries/*.nc']);
-TS_Files = TS_Files(file_indices);
 
 %%%%%%%%%%%%%%% Saving and loading runs %%%%%%%%%%%%%%
 SaveOptions =1; % Save parameters (optional)
@@ -139,8 +139,8 @@ Options.WavelengthM = 0.056; % Wavelength of the SAR sensor in m e.g. 0.056 m fo
 
 %Options.RunID = 'CDMsTest_WithLast'; % Unique identifier for the given run (e.g. VOLCANO_NAME_TEST)
 %Options.RunID = 'CDMsTest_FentaleLastOffsetV4';
-Options.RunID = 'Auto_Last';
-Options.BulkRunID = '0408'; % Unique identifier for summary figures or tables of all runs (e.g. SOURCE_NAME_TEST_0101)
+Options.RunID = 'AutoTS_CDMs';
+Options.BulkRunID = '1808'; % Unique identifier for summary figures or tables of all runs (e.g. SOURCE_NAME_TEST_0101)
 
 %%%%%%%%%%%%%%% Optional Parameters %%%%%%%%%%%%%%%%%%%
 %% Options
@@ -193,12 +193,13 @@ Options.CropTS_endAll = [29 32]; % End timestep to crop timeseries (if Options.C
 Options.CropImg = 0; % Spatially crop image? (1==yes; 0==no)
 Options.CropImgX = 1:500; % X range to crop image (if Options.CropImg ==1)
 Options.CropImgY = 1:500; % Y range to crop image (if Options.CropImg ==1)
-Options.IgnoreLastStep = 0; % Optionally remove first and last timeseries step (can reduce noise in some cases) (1==yes; 0==no)
+Options.IgnoreLastStep = 0; % Optionally remove first and last timeseries step (can reduce noise in some cases) (1==yes; 0==no) (if Options.AutoTimestep ==0)
+Options.AutoTimestep = 1; % Optionally choose between the last and second-last step of the timeseries, choosing the one with lowest stdev (1==yes; 0==no)
 
 %% Data pre-processing (Steps 1-3)
 % Mask Data around nearby GVP volcanoes (step 1)
 Options.MaskVolcs = 1; % 1=Mask x km radius around all other volcanoes in the ifg that aren't the target. 0= don't mask
-Options.Mask_BufferDist = 50; % Radius to mask around volcanoes in pixels (distance = n.pixels * spatial resolution) - distance is approximate
+Options.Mask_BufferDist = 60; % Radius to mask around volcanoes in pixels (distance = n.pixels * spatial resolution) - distance is approximate
 
 % Locate signal using sliding window approach (step 2)
 Options.SlidingWindow = 1; % Use Sliding window approach to find signal location (recommended) - used in ICA, Otsu, and temporal parameters procedures (1==yes; 0==no)
@@ -256,7 +257,7 @@ Options.MaxPropFF = 0.3; % Maximum proportion of subsampled far-field points rel
 Options.FarFieldMask = 1; % Optionally mask far-field pixels (1 == yes; 0 ==no)
 Options.FarFieldUnmaskedVar = 1; % Use unmasked far-field image for semi-variogram generation rather than masked far-field (1 == yes; 0 ==no) (If Options.FarFieldMask == 1 AND Options.Variogram == 1)
 Options.FarFieldMaskMethod = 1; % Mask far-field pixels based on 1. Areas where DEM is +/- N std away from near-field mean OR 2. Additional buffer of near-field region (if Options.FarFieldMask == 1) OR 3. combine both methods
-Options.FarFieldDEM_StdLimit = 1; % N of std away from near-field mean elevation to mask data (if Options.FarFieldMaskMethod == 1 OR 3)
+Options.FarFieldDEM_StdLimit = 1.5; % N of std away from near-field mean elevation to mask data (if Options.FarFieldMaskMethod == 1 OR 3)
 Options.FarFieldAdditionalBuffer = 15; % Percentage of original image size to keep outside of near-field region (if Options.FarFieldMaskMethod == 2 OR 3)
 
 %% Modelling setup and outputs (Step 7-9)
@@ -287,7 +288,7 @@ Options.YangComparison = 0; % For volcanoes with >1 frame, do a comparison with 
 Options.YangType = 2; % Yang Type (1= Yang1988; 2=Cervelli 2013 spheroid (volume); 3=Cervelli 2013 spheroid (pressure))
 Options.DykeComparison = 0; % Compare with dyke (rectangular dislocation, Okada 1985)
 Options.CDMComparison = 1; % Compare with compound dislocation model (CDM) from Nikkhoo (2017)
-Options.CDMGeometry = [2,4,5,6,7,8]; % Constrain CDM to particular geometry or geometries (see below) - single number for one geometry, multiple for more than 1 geometry e.g. [1,3,6]:
+Options.CDMGeometry = [1,2,4,5,6,7,8]; % Constrain CDM to particular geometry or geometries (see below) - single number for one geometry, multiple for more than 1 geometry e.g. [1,3,6]:
 % 1 = CDM with full freedom (all params)
 % 2 = simple axisymmetic sphere (x,y,z,r,dV)
 % 3 = axisymettric sphere (with trend/plunge) (x,y,z,r,tr,pl,dV)
@@ -305,8 +306,8 @@ Options.MogiStartDepth = 4000;
 Options.MogiMinDepth = 500;
 Options.MogiMaxDepth = 10000;
 Options.MogiStartVol = 7e06;
-Options.MogiMinVol = -1e08;
-Options.MogiMaxVol = 1e08;
+Options.MogiMinVol = -1.5e08;
+Options.MogiMaxVol = 1.5e08;
 %   Penny model bounds 
 %   (z location based on previous catalogues (see Mogi description), Radius bounds of 4000/500/10000 based on East African Rift System (Biggs et al. 2009; 2011))
 Options.PennyStartRadius = 5000;
@@ -410,7 +411,7 @@ if Options.CDMComparison==1
         Options.CDMMinAY = 500;
         Options.CDMMinAZ = 500;
         Options.CDMMinOpen = -5;
-        Options.CDMMinDV = -1e08;
+        Options.CDMMinDV = -1.5e08;
         Options.CDMMaxZ = 10000;
         Options.CDMMaxOmegX = 90;
         Options.CDMMaxOmegY = 90;
@@ -419,7 +420,7 @@ if Options.CDMComparison==1
         Options.CDMMaxAY = 10000;
         Options.CDMMaxAZ = 10000;
         Options.CDMMaxOpen = 5;
-        Options.CDMMaxDV = 1e08;
+        Options.CDMMaxDV = 1.5e08;
     end
     if ismember(2,Options.CDMGeometry)  % Simple sphere 
         % Constrain parameters where needed
@@ -428,10 +429,10 @@ if Options.CDMComparison==1
         Options.CDM_AS_StartDV = 1e06;
         Options.CDM_AS_MinZ = 500;
         Options.CDM_AS_MinAX = 500;
-        Options.CDM_AS_MinDV = -1e08;
+        Options.CDM_AS_MinDV = -1.5e08;
         Options.CDM_AS_MaxZ = 10000;
         Options.CDM_AS_MaxAX = 10000;
-        Options.CDM_AS_MaxDV = 1e08;
+        Options.CDM_AS_MaxDV = 1.5e08;
     end
     if ismember(3,Options.CDMGeometry) % Sphere with trend/plunge 
         % Constrain parameters where needed
@@ -444,12 +445,12 @@ if Options.CDMComparison==1
         Options.CDM_S_MinAX = 500;
         Options.CDM_S_MinOmegX = 0;
         Options.CDM_S_MinOmegZ = 0;
-        Options.CDM_S_MinDV = -1e08;
+        Options.CDM_S_MinDV = -1.5e08;
         Options.CDM_S_MaxZ = 10000;
         Options.CDM_S_MaxAX = 10000;
         Options.CDM_S_MaxOmegX = 90;
         Options.CDM_S_MaxOmegZ = 180;
-        Options.CDM_S_MaxDV = 1e08;
+        Options.CDM_S_MaxDV = 1.5e08;
     end
     if ismember(4,Options.CDMGeometry) % Symmetric sill
         % Constrain parameters where needed
@@ -458,10 +459,10 @@ if Options.CDMComparison==1
         Options.CDM_Si_StartDV = 1e06;
         Options.CDM_Si_MinZ = 500;
         Options.CDM_Si_MinAX = 500;
-        Options.CDM_Si_MinDV = -1e08;
+        Options.CDM_Si_MinDV = -1.5e08;
         Options.CDM_Si_MaxZ = 10000;
         Options.CDM_Si_MaxAX = 10000;
-        Options.CDM_Si_MaxDV = 1e08;
+        Options.CDM_Si_MaxDV = 1.5e08;
     end
     if ismember(5,Options.CDMGeometry) % Sill (non-symmetric)
         % Constrain parameters where needed
@@ -474,12 +475,12 @@ if Options.CDMComparison==1
         Options.CDM_Si2_MinAX = 500;
         Options.CDM_Si2_MinAY = 500;
         Options.CDM_Si2_MinOmegZ = 0;
-        Options.CDM_Si2_MinDV = -1e08;
+        Options.CDM_Si2_MinDV = -1.5e08;
         Options.CDM_Si2_MaxZ = 10000;
         Options.CDM_Si2_MaxAX = 10000;
         Options.CDM_Si2_MaxAY = 10000;
         Options.CDM_Si2_MaxOmegZ = 180;
-        Options.CDM_Si2_MaxDV = 1e08;
+        Options.CDM_Si2_MaxDV = 1.5e08;
     end
     if ismember(6,Options.CDMGeometry) % Dyke-like
         Options.CDM_D_StartZ = 5000;
@@ -496,47 +497,47 @@ if Options.CDMComparison==1
         Options.CDM_D_MaxAX = 10000;
         Options.CDM_D_MaxAZ = 10000;
         Options.CDM_D_MaxOmegZ = 180;
-        Options.CDM_D_MaxDV = 1e08;
+        Options.CDM_D_MaxDV = 1.5e08;
     end
     if ismember(7,Options.CDMGeometry) % Prolate spheroid
         Options.CDM_PS_StartZ = 5000;
         Options.CDM_PS_StartAspectRatio = 0.5; % Less than 1
         Options.CDM_PS_StartAZ = 1000;
-        Options.CDM_PS_StartOmegX = 45;
+        Options.CDM_PS_StartOmegX = 22.5;
         Options.CDM_PS_StartOmegZ = 90;
         Options.CDM_PS_StartDV = 1e06;
         Options.CDM_PS_MinZ = 500;
-        Options.CDM_PS_MinAspectRatio = 0.1;
+        Options.CDM_PS_MinAspectRatio = 0.2;
         Options.CDM_PS_MinAZ = 500;
         Options.CDM_PS_MinOmegX = 0;
         Options.CDM_PS_MinOmegZ = 0;
-        Options.CDM_PS_MinDV = -1e08;
+        Options.CDM_PS_MinDV = -1.5e08;
         Options.CDM_PS_MaxZ = 10000;
         Options.CDM_PS_MaxAspectRatio = 1;
         Options.CDM_PS_MaxAZ = 10000;
-        Options.CDM_PS_MaxOmegX = 90;
+        Options.CDM_PS_MaxOmegX = 45;
         Options.CDM_PS_MaxOmegZ = 180;
-        Options.CDM_PS_MaxDV = 1e08;
+        Options.CDM_PS_MaxDV = 1.5e08;
     end
     if ismember(8,Options.CDMGeometry) % Oblate spheroid
         Options.CDM_OS_StartZ = 5000;
         Options.CDM_OS_StartAspectRatio = 0.5; % Less than 1
         Options.CDM_OS_StartAX = 1000;
-        Options.CDM_OS_StartOmegX = 45;
+        Options.CDM_OS_StartOmegX = 22.5;
         Options.CDM_OS_StartOmegZ = 90;
         Options.CDM_OS_StartDV = 1e06;
         Options.CDM_OS_MinZ = 500;
-        Options.CDM_OS_MinAspectRatio = 0.1;
+        Options.CDM_OS_MinAspectRatio = 0.2;
         Options.CDM_OS_MinAX = 500;
         Options.CDM_OS_MinOmegX = 0;
         Options.CDM_OS_MinOmegZ = 0;
-        Options.CDM_OS_MinDV = -1e08;
+        Options.CDM_OS_MinDV = -1.5e08;
         Options.CDM_OS_MaxZ = 10000;
         Options.CDM_OS_MaxAspectRatio = 1;
         Options.CDM_OS_MaxAX = 10000;
-        Options.CDM_OS_MaxOmegX = 90;
+        Options.CDM_OS_MaxOmegX = 45;
         Options.CDM_OS_MaxOmegZ = 180;
-        Options.CDM_OS_MaxDV = 1e08;
+        Options.CDM_OS_MaxDV = 1.5e08;
     end
 end
 
@@ -603,6 +604,10 @@ TS_Files = SortStruct(TS_Files, 'name');
 %% Steps to execute
 % If in 'bulk', use asc and dsc data options to figure out which data is being used for each volcano
 [TS_Files, Loop_nums] = Get_Loop_Nums(TS_Files,Options);
+if exist('group_idx','var') && ~isnan(group_idx) % For TMUX looping
+    Loop_nums = Loop_nums{group_idx};
+    TS_Files = TS_Files(Loop_nums);
+end
 
 % Prepare initial variables
 rad2m = Options.WavelengthM./(4.*pi);

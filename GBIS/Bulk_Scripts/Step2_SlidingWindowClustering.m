@@ -13,6 +13,9 @@ function Location = Step2_SlidingWindowClustering(LastStep, VolcName, Options)
 
     LastStep(LastStep==0) = NaN;
 
+    % Remove mean to normalise values
+    LastStep = LastStep - mean(LastStep(:),'omitnan');
+
     if Options.SW_RegionShrink == 1
         % Apply region shrinking to remove areas of poor unwrapping
         LastStep = IFG_Region_Shrink(LastStep,Options.SW_RegionShrink_MinPts,Options.SW_RegionShrink_DiskSize,VolcName,1);

@@ -9,7 +9,6 @@ if ~exist([pwd,'/Buffers'],'dir')
     mkdir(pwd,'Buffers')
     addpath([pwd,'/Buffers'])
 end
-
 % Extract name of closest volcano to the centrepoint of the
 % interferogram and compare this to the name of the interferogram (should be the same)
 lon = lon(1,:).';

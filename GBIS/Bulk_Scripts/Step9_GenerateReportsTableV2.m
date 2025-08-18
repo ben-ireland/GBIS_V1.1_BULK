@@ -11,7 +11,8 @@ function FullTable = Step9_GenerateReportsTableV2(FullTable,OutputFilepath,NumFr
 
         if length(OutputFilepath)>1 && k>1
             disp('Comparing model fits using BIC')
-            [DeltaAIC(k), BestModel{k}] = CompareBIC_GBIS(OutputFilepath{1},OutputFilepath{k}); % Assumes first OutputFilePath is Mogi source. For other AIC measurements do manually?
+            [DeltaAIC(k), DeltaAICUnw(k), BestModel{k}] = CompareAIC_GBIS(OutputFilepath{1},OutputFilepath{k}); % Assumes first OutputFilePath is Mogi source. For other AIC measurements do manually?
+            [DeltaBIC(k), DeltaBICUnw(k), BestModel{k}] = CompareBIC_GBIS(OutputFilepath{1},OutputFilepath{k});
         elseif length(OutputFilepath)==1 || k==1
             DeltaAIC(k) = NaN;
             BestModel{k} = 'NA';
@@ -23,7 +24,7 @@ function FullTable = Step9_GenerateReportsTableV2(FullTable,OutputFilepath,NumFr
         if length(OutputFilepath)>1
             for k = 1:length(OutputFilepath)
                 disp('Creating output tables')
-                AllTables{k} = CreateDeformationCatalogue(OutputFilepath{k},VolcNames,NumFrames,SignalLocationGBIS{k},Opts{k},DeltaAIC(k),BestModel{k},AspectRatio{k});
+                AllTables{k} = CreateDeformationCatalogue(OutputFilepath{k},VolcNames,NumFrames,SignalLocationGBIS{k},Opts{k},DeltaAIC(k),DeltaAICUnw(k),DeltaBIC(k),DeltaBICUnw(k),BestModel{k},AspectRatio{k});
                 
                 if k>1
                     if k==2

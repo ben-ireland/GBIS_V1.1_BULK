@@ -269,7 +269,8 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
         %% Manually remove offset (change ref pixel)
         if k==1 && Options.Offset ==1
             % Apply manual offset
-            [loadedData.Phase,loadedData.Offset] = RemovePhaseOffset(FineBoundingBox,loadedData);
+            FineBoundingBoxLL = convertFineBBcoordsStep6(FineBoundingBox,FullResLat,FullResLon);
+            [loadedData.Phase,loadedData.Offset] = RemovePhaseOffset(FineBoundingBoxLL,loadedData);
         end
 
         if k==2 && Options.Offset ==1

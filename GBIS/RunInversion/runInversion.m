@@ -128,28 +128,52 @@ while iKeep < invpar.nRuns  % While number of iterations is < than number of run
             case 'CERP'
                 mFunc{i}=model.trial(index1:index1+7);
                 U = CervelliYangPressure(mFunc{i},obs,nu);
-            case 'CDMN'   
+            case 'CDMN'  
+                if iKeep ==1
+                    disp('If CDM radius/depth>0.4, the model will not contribute towards the deformation')
+                end 
                 mFunc{i}=model.trial(index1:index1+9);
                 U = PrepCDM(mFunc{i},obs,nu);
-            case 'CDMB'   
+            case 'CDMB'  
+                if iKeep ==1
+                    disp('If CDM radius/depth>0.4, the model will not contribute towards the deformation')
+                end  
                 mFunc{i}=model.trial(index1:index1+4);
                 U = CDM_SymmetricSimple(mFunc{i},obs,nu);
             case 'CDMG'   
+                if iKeep ==1
+                    disp('If CDM radius/depth>0.4, the model will not contribute towards the deformation')
+                end 
                 mFunc{i}=model.trial(index1:index1+6);
                 U = CDM_Symmetric(mFunc{i},obs,nu);
-            case 'CDMI'   
+            case 'CDMI'  
+                if iKeep ==1
+                    disp('If CDM radius/depth>0.4, the model will not contribute towards the deformation')
+                end  
                 mFunc{i}=model.trial(index1:index1+4);
                 U = CDM_Sill_Symmetric(mFunc{i},obs,nu);
             case 'CDMJ'   
+                if iKeep ==1
+                    disp('If CDM radius/depth>0.4, the model will not contribute towards the deformation')
+                end 
                 mFunc{i}=model.trial(index1:index1+6);
                 U = CDM_Sill(mFunc{i},obs,nu);       
-            case 'CDMK'   
+            case 'CDMK' 
+                if iKeep ==1
+                    disp('If dyke length/opening/width reaches unrealistic values, the model will not contribute towards the deformation')
+                end 
                 mFunc{i}=model.trial(index1:index1+6);
                 U = CDM_Dyke(mFunc{i},obs,nu);      
-            case 'CDML'   
+            case 'CDML'  
+                if iKeep ==1
+                    disp('If CDM radius/depth>0.4, the model will not contribute towards the deformation')
+                end    
                 mFunc{i}=model.trial(index1:index1+7);
                 U = CDM_Prolate_Spheroid(mFunc{i},obs,nu);          
-            case 'CDMO'   
+            case 'CDMO'  
+                if iKeep ==1
+                    disp('If CDM radius/depth>0.4, the model will not contribute towards the deformation')
+                end    
                 mFunc{i}=model.trial(index1:index1+7);
                 U = CDM_Oblate_Spheroid(mFunc{i},obs,nu);                                   
         end

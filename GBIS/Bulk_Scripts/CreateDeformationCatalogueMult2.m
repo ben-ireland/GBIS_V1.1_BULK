@@ -1,4 +1,4 @@
-function FullTable = CreateDeformationCatalogueMult2(OutputFilePath,VolcName, NumFrames, SignalLocationGBIS ,Options,DeltaAIC,BestModel,AspectRatio)
+function FullTable = CreateDeformationCatalogueMult2(OutputFilePath,VolcName, NumFrames, SignalLocationGBIS ,Options,DeltaAIC,DeltaAICUnw,DeltaBIC,DeltaBICUnw,BestModel,AspectRatio)
 % Ben Ireland, University of Bristol, Dec 2023
 % - Script to create a deformation catalogue from spatial, temporal and source parameters extracted from GBIS-BULK
 %% Load parameters
@@ -233,7 +233,7 @@ for m = 1:length(invpar.model)
             VolcanoName = join(convertCharsToStrings(VolcName),' & ');
         end
         BestModel = convertCharsToStrings(BestModel);
-        SourceParameters = table(ModelName,nRuns,OptimalResults,Mean,Median,LowPercent,UpPercent,WeightedRSS,RMSE,DeltaAIC,BestModel);
+        SourceParameters = table(ModelName,nRuns,OptimalResults,Mean,Median,LowPercent,UpPercent,WeightedRSS,RMSE,DeltaAIC,DeltaAICUnw,DeltaBIC,DeltaBICUnw,BestModel);
         Name = table(VolcanoName);
     end
 

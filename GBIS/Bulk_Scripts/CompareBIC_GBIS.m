@@ -1,4 +1,4 @@
-function [DeltaBIC, BestModel] = CompareBIC_GBIS(OutputFilepathMogi,OutputFilepathOther)
+function [DeltaBIC, DeltaBICRSS, BestModel] = CompareBIC_GBIS(OutputFilepathMogi,OutputFilepathOther)
 
 % Load Mogi results
 load(OutputFilepathMogi);

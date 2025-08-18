@@ -1,4 +1,4 @@
-function [DeltaAICWRSS2, BestModel] = CompareAIC_GBIS(OutputFilepathMogi,OutputFilepathOther)
+function [DeltaAIC, DeltaAICRSS, BestModel] = CompareAIC_GBIS(OutputFilepathMogi,OutputFilepathOther)
 
 % Load Mogi results
 load(OutputFilepathMogi);

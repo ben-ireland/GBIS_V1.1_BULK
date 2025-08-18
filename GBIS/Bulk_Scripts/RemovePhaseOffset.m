@@ -6,6 +6,6 @@ function [OffsetPhase,OffsetValue] = RemovePhaseOffset(FineBoundingBox,loadedDat
     subset = loadedData.Phase(ixSubset);
 
     % Find and remove offset
-    OffsetValue = mean(subset);
+    OffsetValue = mean(subset,'omitnan');
     OffsetPhase = loadedData.Phase - OffsetValue;
 end

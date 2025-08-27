@@ -5,8 +5,8 @@ NUM_GROUPS=16
 # Signal num to start on
 START_NUM=1
 # ID
-RUN_NAME="AutoLast"
-OVERWRITE_LOGS=false   # Set to true to allow overwriting existing logs
+RUN_NAME="AutoCDMsV3"
+OVERWRITE_LOGS=true   # Set to true to allow overwriting existing logs
 
 mkdir -p logs
 for i in $(seq $START_NUM $NUM_GROUPS); do
@@ -28,6 +28,8 @@ for i in $(seq $START_NUM $NUM_GROUPS); do
 
     tmux new-session -d -s $SESSION "GROUP_IDX=$i matlab -batch GBIS_BULK_Input_TmuxAuto -nodisplay -nosplash -nodesktop > $LOGFILE 2>&1; tmux kill-session -t $SESSION"
     echo "Started tmux session $SESSION with log $LOGFILE"
+    sleep 2 
+    #Stops lots of accesses to the same files at the same time which can cause crashes
 done
 
 unset NUM_GROUPS

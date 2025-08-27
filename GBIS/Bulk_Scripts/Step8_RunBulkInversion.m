@@ -5,11 +5,37 @@ function OutputFilepaths = Step8_RunBulkInversion(InpFilePath,NumFrames,Options)
         tic
         disp('Running GBIS for Mogi source')
         if Options.SeedingRun ==1
-            InpFilePathSeed = strcat(InpFilePath(1:end-4),'_Seed.inp');
-            disp('Seeding run for Mogi source')
-            SeedFilepath = GBISrun(InpFilePathSeed,[1,2],'n','M',(Options.SeedingnRuns),Options.skipSimulatedAnnealing);
-            cd(startDir)
-            InpFilePath = ProcessSeedingRun(InpFilePath,SeedFilepath,Options);
+            for k = 1:Options.SeedingMaxRuns
+                InpFilePathSeed = strcat(InpFilePath(1:end-4),'_Seed',num2str(k),'.inp');
+
+                if k<Options.SeedingMaxRuns
+                    InpFilePathSeedNew = strcat(InpFilePath(1:end-4),'_Seed',num2str(k+1),'.inp');
+                else
+                    InpFilePathSeedNew = InpFilePath;
+                end
+
+                if k==1
+                    copyfile(InpFilePath,InpFilePathSeed);
+                else
+                    copyfile(InpFilePathSeed,InpFilePathSeedNew);
+                end
+                disp(['Seeding run ',num2str(k),' for Mogi source'])
+                SeedFilepath = GBISrun(InpFilePathSeed,[1,2],'n','M',(Options.SeedingnRuns),Options.skipSimulatedAnnealing);
+                cd(startDir)
+                [InpFilePathSeedNew, BoundReduction] = ProcessSeedingRun(InpFilePathSeedNew,SeedFilepath,Options);
+
+                if mean(BoundReduction) > Options.SeedingTargetReduction
+                    copyfile(InpFilePathSeedNew,InpFilePath);
+                    disp(['Mean bound reduction of ',num2str(Options.SeedingTargetReduction), ' exceeded - moving on to full run'])
+                    break
+                end
+
+                if k==Options.SeedingMaxRuns
+                    copyfile(InpFilePathSeedNew,InpFilePath);
+                    disp(['All ',num2str(Optiosn.SeedingMaxRuns),' seeding runs complete'])
+                    disp(['Mean bound reduction of ',num2str(Options.SeedingTargetReduction), ' not reached - moving on to full run'])
+                end
+            end
         end
         OutputFilepaths{1} = GBISrun(InpFilePath,[1,2],'n','M',(Options.nRuns),Options.skipSimulatedAnnealing);
         close all

@@ -79,41 +79,7 @@ clc; clear all; close all
 %%%%%%%%%%%% FOR TMUX-BASED JOB SPLITTING %%%%%%%%%%%  
 args = getenv('GROUP_IDX'); % Get which group of files is being used
 group_idx = str2double(args);
-% file_indices = 1:23;
-% switch group_idx
-%     case 1
-%         file_indices = 1:2;
-%     case 2
-%         file_indices = 3;
-%     case 3
-%         file_indices = 4;
-%     case 4
-%         file_indices = 5;
-%     case 5
-%         file_indices = 6:7;
-%     case 6
-%         file_indices = 8:9;
-%     case 7
-%         file_indices = 10;
-%     case 8
-%         file_indices = 11:12;
-%     case 9
-%         file_indices = 13;
-%     case 10
-%         file_indices = 14;
-%     case 11
-%         file_indices = 15:16;
-%     case 12
-%         file_indices = 17:18;
-%     case 13
-%         file_indices = 19;
-%     case 14
-%         file_indices = 20;
-%     case 15
-%         file_indices = 21:22;
-%     case 16
-%         file_indices = 23;
-% end
+
 %%%%%%%%%%%%%%%% INPUT YOUR DATA HERE %%%%%%%%%%%%%%%
 %% Add input files and bulk InSAR data
 input_Filename = 'Generic_Input_File'; % Without .inp extension
@@ -123,6 +89,7 @@ input_Filename = 'Generic_Input_File'; % Without .inp extension
 %TS_Files = dir([pwd,'/SampleData','/**/timeseries/*.nc']); % .nc example (comment out as necessary)
 %TS_Files = dir([pwd,'/SampleData','/**/TS_GEOCml1*/cum_filt.h5']); % .h5 example
 TS_Files = dir(['/scratch/Ben/EAR_Data/**/timeseries/*.nc']);
+%TS_Files = TS_Files([10])
 
 %%%%%%%%%%%%%%% Saving and loading runs %%%%%%%%%%%%%%
 SaveOptions =1; % Save parameters (optional)
@@ -139,13 +106,13 @@ Options.WavelengthM = 0.056; % Wavelength of the SAR sensor in m e.g. 0.056 m fo
 
 %Options.RunID = 'CDMsTest_WithLast'; % Unique identifier for the given run (e.g. VOLCANO_NAME_TEST)
 %Options.RunID = 'CDMsTest_FentaleLastOffsetV4';
-Options.RunID = 'AutoTS_CDMs';
-Options.BulkRunID = '1808'; % Unique identifier for summary figures or tables of all runs (e.g. SOURCE_NAME_TEST_0101)
+Options.RunID = 'DepthEstTest';
+Options.BulkRunID = '2708'; % Unique identifier for summary figures or tables of all runs (e.g. SOURCE_NAME_TEST_0101)
 
 %%%%%%%%%%%%%%% Optional Parameters %%%%%%%%%%%%%%%%%%%
 %% Options
 Options.StartStep = 0; % Which step to start on
-Options.EndStep = 10; % Which step to stop on
+Options.EndStep = 7; % Which step to stop on
 
 % Options if running automatically
 Options.SkipGBIS = 0; % Optionally skip the modelling step (1) (useful for development/pre-processing work)
@@ -262,6 +229,8 @@ Options.FarFieldAdditionalBuffer = 15; % Percentage of original image size to ke
 
 %% Modelling setup and outputs (Step 7-9)
 % Setup input files (step 7)
+Options.EstimateDepthBounds =1; % Optionally estimate depth bounds based on size of Otsu region and Mogi equation (depth vs signal size) (1==yes, 0==no)
+Options.DepthEstimateA = 0.05; % Estimate of percentage of displacement at the edge of the near-field bounding box (if Options.EstimateDepthBounds==1) (Higher = deeper depth constraints)
 Options.PreProcOffset = 1; % Minimise far-field signal by removing offset during preprocessing? (1==on, 0==off)
 Options.Offset = 1; % Invert for constant offset in GBIS? (1==yes, 0==no)
 Options.OffsetStep = 1e-4; % Step, lower and upper bounds for constant offset (if Options.Offset ==1)
@@ -280,14 +249,14 @@ Options.Change_Wavelength = 0; % Modify wavelength or not (default: 0.056 m)
 % Source geometry options
 Options.SourceType = 1; % default initial source types - 1=Mogi 2=Penny-shaped crack - other sources, see below (change in Step8_RunBulkInversion script)
 Options.OtherSource = 0; % Optionally try to model with another source other than Penny or Mogi (0== No, 1== Yes)
-Options.OtherSourceType = 'D'; % Additional source type if Options.OtherSource == 1
-Options.PennyComparison = 0; % For volcanoes with more than 1 frame, try both Mogi and Penny and compare fits using AIC
-Options.SillComparison = 0; % For volcanoes with more than 1 frame, try both Mogi and Okada sill and compare fits using AIC
+Options.OtherSourceType = 'D'; % Additional source type if Options.OtherSource == 1 (You can add multiple sources e.g. 'MD' but bounds have to be set manually)
+Options.PennyComparison = 0; % Do a comparison with a Penny source (3 geometry options) and compare with other sources
+Options.SillComparison = 0; % Do a comparison with a Sill source (Okada, 1985) and compare with other sources
+Options.YangComparison = 0; % Do a comparison with a Yang source (3 geometry options) and compare with other sources
+Options.DykeComparison = 0; % Do a comparison with a Dyke source (Okada, 1985) and compare with other sources
+Options.CDMComparison = 1; % Do a comparison compound dislocation model (CDM) source Nikkhoo (2017) (Various sub-geometries - see Options.CDMGeometry)
 Options.PennyType = 3; % Use Fialko (1), Sun Penny-shaped crack solution using pressure (2), or Sun Penny-shaped crack solution using volume (3)
-Options.YangComparison = 0; % For volcanoes with >1 frame, do a comparison with a Yang source
 Options.YangType = 2; % Yang Type (1= Yang1988; 2=Cervelli 2013 spheroid (volume); 3=Cervelli 2013 spheroid (pressure))
-Options.DykeComparison = 0; % Compare with dyke (rectangular dislocation, Okada 1985)
-Options.CDMComparison = 1; % Compare with compound dislocation model (CDM) from Nikkhoo (2017)
 Options.CDMGeometry = [1,2,4,5,6,7,8]; % Constrain CDM to particular geometry or geometries (see below) - single number for one geometry, multiple for more than 1 geometry e.g. [1,3,6]:
 % 1 = CDM with full freedom (all params)
 % 2 = simple axisymmetic sphere (x,y,z,r,dV)
@@ -415,7 +384,7 @@ if Options.CDMComparison==1
         Options.CDMMaxZ = 10000;
         Options.CDMMaxOmegX = 90;
         Options.CDMMaxOmegY = 90;
-        Options.CDMMaxOmegZ = 90;
+        Options.CDMMaxOmegZ = 180;
         Options.CDMMaxAX = 10000;
         Options.CDMMaxAY = 10000;
         Options.CDMMaxAZ = 10000;
@@ -546,8 +515,12 @@ end
 % Model Setup (Step 8)
 Options.nRuns = 2e5; % Number of iternations for GBIS
 Options.SeedingRun = 0; % Optionally run a seeding run to start full inversion with tighter parameters bounds (1 ==yes; 0==no)
-Options.SeedingnRuns = 2e4; % Number of runs for a seeding run (if Options.SeedingRun ==1)
-Options.SeedingBurnin = 1e4; % Burn-in (nRuns) for seeding runs for setting lower and upper bounds from percentiles
+Options.SeedingMaxRuns = 3; % Number of seeding runs to run in sequence to constrain bounds
+Options.SeedingnRuns = 5e4; % Number of runs for a seeding run (if Options.SeedingRun ==1)
+Options.SeedingBurnin = 2.5e4; % Burn-in (nRuns) for seeding runs for setting lower and upper bounds from percentiles
+Options.SeedingMethod = 1; % Method for constraining bounds (1== Percentiles; 2== stdDev)
+Options.SeedingCriteria = 1; % Criteria for new bounds. If Options.SeedingMethod == 1, Options.SeedingCriteria == percentiles e.g. 95; If Options.SeedingMethod == 2, Options.SeedingCriteria == N stdDevs from optimal results
+Options.SeedingTargetReduction = 100; % Target mean reduction (%) in bound ranges across all parameters (to allow seeding runs to exit early). If you don't want to set a target, set it to 100%)
 Options.skipSimulatedAnnealing = 'n'; % Skip simulated annealing process
 Options.SingleFrameOnly = 0; % Only run 1 frame per volcano
 Options.AscDscOnly = 0; % Only run for InSAR data you have more than 1 frame of data for
@@ -605,8 +578,9 @@ TS_Files = SortStruct(TS_Files, 'name');
 % If in 'bulk', use asc and dsc data options to figure out which data is being used for each volcano
 [TS_Files, Loop_nums] = Get_Loop_Nums(TS_Files,Options);
 if exist('group_idx','var') && ~isnan(group_idx) % For TMUX looping
-    Loop_nums = Loop_nums{group_idx};
-    TS_Files = TS_Files(Loop_nums);
+    Loop_nums = {Loop_nums{group_idx}};
+    TS_Files = TS_Files(Loop_nums{:});
+    Loop_nums = {Loop_nums{:} - (min(Loop_nums{:}) -1)}; % Re-adjust loop nums to work with cropped TS_Files
 end
 
 % Prepare initial variables
@@ -878,6 +852,9 @@ for i = 1:length(Loop_nums)
                 inp_Filepath = DefaultInpFilePath;
             end
             disp(['Step 7 - Frame ',num2str(j),' out of ', num2str(NumFrames), ' | Bulk run ', num2str(i), ' out of ',num2str(length(Loop_nums))]);
+            if Options.EstimateDepthBounds ==1
+                Options.NewDepthLims = RecalculateDepthBounds(compMask,lat,lon,outputFileName,Options);
+            end
             InpFilePath = Step7_PrepInputFile(inp_Filepath,outputFileName,FineBoundingBox,BoundingBox,nObs_Raw,Filename,Filename_Raw,j,Options);
 
             if Options.EndStep ==7 && j == NumFrames && i == length(Loop_nums)

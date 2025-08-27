@@ -17,7 +17,7 @@ function U = PrepCDM(m,obs,nu)
     az2 = 2*az;
     opening = dv/(ax2*ay2+ax2*az2+ay2*az2);
 
-    [minDepth, Theta]=CDM_MinDepth(X0,Y0,depth,omegaX,omegaY,omegaZ,ax,ay,az)
+    [minDepth, Theta]=CDM_MinDepth(X0,Y0,depth,omegaX,omegaY,omegaZ,ax,ay,az);
     VertExt = depth-minDepth;
 
     Warn = 1;

@@ -162,6 +162,8 @@ if endsWith(TS_Files.name,'.nc')
             Norm2 = LOS(:,:,end) - LOS(:,:,2);
             Norm = RemoveGVPVolcsStep0(Norm, lat, lon, Options);
             Norm2 = RemoveGVPVolcsStep0(Norm2, lat, lon, Options);
+            Norm(Norm==0) = NaN;
+            Norm2(Norm2==0) = NaN;
             Std1 = std(Norm(:),'omitnan');
             Std2 = std(Norm2(:),'omitnan');
 
@@ -252,6 +254,8 @@ elseif endsWith(TS_Files.name, '.h5')
             Norm2 = LOS(:,:,end) - LOS(:,:,2);
             Norm = RemoveGVPVolcsStep0(Norm, lat, lon, Options);
             Norm2 = RemoveGVPVolcsStep0(Norm2, lat, lon, Options);
+            Norm(Norm==0) = NaN;
+            Norm2(Norm2==0) = NaN;
             Std1 = std(Norm(:),'omitnan');
             Std2 = std(Norm2(:),'omitnan');
 

@@ -1,0 +1,19 @@
+# Ignore all files
+*.inp
+GBIS_BULK_INPUT*.m
+*
+
+# Except these key files and folders
+!Generic_Input_File.inp
+!GBIS_BULK_Input.m
+!GBIS_BULK_Input_TmuxAuto.m
+!BatchGBISRun.sh
+!BatchGBISRunBG.sh
+!BatchGBISRunBG_Alt.sh
+!stopGBIS_BatchJobs.sh
+!GBIS/
+!GBIS/**
+!SampleData/
+!SampleData/**
+!.gitignore
+

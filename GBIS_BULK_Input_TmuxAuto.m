@@ -76,10 +76,6 @@
 
 clc; clear all; close all
 
-%%%%%%%%%%%% FOR TMUX-BASED JOB SPLITTING %%%%%%%%%%%  
-args = getenv('GROUP_IDX'); % Get which group of files is being used
-group_idx = str2double(args);
-
 %%%%%%%%%%%%%%%% INPUT YOUR DATA HERE %%%%%%%%%%%%%%%
 %% Add input files and bulk InSAR data
 input_Filename = 'Generic_Input_File'; % Without .inp extension
@@ -226,12 +222,12 @@ Options.FarFieldUnmaskedVar = 1; % Use unmasked far-field image for semi-variogr
 Options.FarFieldMaskMethod = 1; % Mask far-field pixels based on 1. Areas where DEM is +/- N std away from near-field mean OR 2. Additional buffer of near-field region (if Options.FarFieldMask == 1) OR 3. combine both methods
 Options.FarFieldDEM_StdLimit = 1.5; % N of std away from near-field mean elevation to mask data (if Options.FarFieldMaskMethod == 1 OR 3)
 Options.FarFieldAdditionalBuffer = 15; % Percentage of original image size to keep outside of near-field region (if Options.FarFieldMaskMethod == 2 OR 3)
+Options.PreProcOffset = 1; % Minimise far-field signal by removing offset during preprocessing? (1==on, 0==off)
 
 %% Modelling setup and outputs (Step 7-9)
 % Setup input files (step 7)
 Options.EstimateDepthBounds =1; % Optionally estimate depth bounds based on size of Otsu region and Mogi equation (depth vs signal size) (1==yes, 0==no)
 Options.DepthEstimateA = 0.05; % Estimate of percentage of displacement at the edge of the near-field bounding box (if Options.EstimateDepthBounds==1) (Higher = deeper depth constraints)
-Options.PreProcOffset = 1; % Minimise far-field signal by removing offset during preprocessing? (1==on, 0==off)
 Options.Offset = 1; % Invert for constant offset in GBIS? (1==yes, 0==no)
 Options.OffsetStep = 1e-4; % Step, lower and upper bounds for constant offset (if Options.Offset ==1)
 Options.OffsetLower = -1e-1;
@@ -248,8 +244,6 @@ Options.Change_Wavelength = 0; % Modify wavelength or not (default: 0.056 m)
 
 % Source geometry options
 Options.SourceType = 1; % default initial source types - 1=Mogi 2=Penny-shaped crack - other sources, see below (change in Step8_RunBulkInversion script)
-Options.OtherSource = 0; % Optionally try to model with another source other than Penny or Mogi (0== No, 1== Yes)
-Options.OtherSourceType = 'D'; % Additional source type if Options.OtherSource == 1 (You can add multiple sources e.g. 'MD' but bounds have to be set manually)
 Options.PennyComparison = 0; % Do a comparison with a Penny source (3 geometry options) and compare with other sources
 Options.SillComparison = 0; % Do a comparison with a Sill source (Okada, 1985) and compare with other sources
 Options.YangComparison = 0; % Do a comparison with a Yang source (3 geometry options) and compare with other sources
@@ -266,6 +260,8 @@ Options.CDMGeometry = [1,2,4,5,6,7,8]; % Constrain CDM to particular geometry or
 % 6 = dyke-like (vertically extensive) (x,y,z,l,w,str,dV)
 % 7 = prolate spheroid (x,y,z,a,ar,tr,pl,dV)
 % 8 = oblate spheroid (x,y,z,a,ar,tr,pl,dV)
+Options.OtherSource = 0; % Optionally try to model with another source other than Penny or Mogi (0== No, 1== Yes)
+Options.OtherSourceType = 'D'; % Additional source type if Options.OtherSource == 1 (You can add multiple sources e.g. 'MD' but bounds have to be set manually)
 
 %   Mogi model bounds 
 %   4 km based on median depth from Ebmeier et al. (2018); 7e06 m^3 volume based on rounded injection volume (Delaney, 1994) from median depth (4 km) and displacements (~10 cm) of intrusions (Biggs and Pritchard, 2017)
@@ -577,6 +573,10 @@ TS_Files = SortStruct(TS_Files, 'name');
 %% Steps to execute
 % If in 'bulk', use asc and dsc data options to figure out which data is being used for each volcano
 [TS_Files, Loop_nums] = Get_Loop_Nums(TS_Files,Options);
+
+% IF JOB SPLITTING  
+args = getenv('GROUP_IDX'); % Get which group of files is being used
+group_idx = str2double(args);
 if exist('group_idx','var') && ~isnan(group_idx) % For TMUX looping
     Loop_nums = {Loop_nums{group_idx}};
     TS_Files = TS_Files(Loop_nums{:});

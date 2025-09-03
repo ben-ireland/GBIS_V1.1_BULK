@@ -1,7 +1,34 @@
 #!/bin/bash
+
+# Kills all MATLAB jobs started with GROUP_IDX (from BatchGBISRunBG_Alt.sh)
+if [ ! -d "$PIDS_DIR" ]; then
+    echo "No $PIDS_DIR directory found, nothing to stop."
+else
+    for pidfile in "$PIDS_DIR"/*.pids; do
+        [ -e "$pidfile" ] || continue  # skip if no .pids files
+        echo "Processing $pidfile..."
+
+        while read -r pid; do
+            if [ -n "$pid" ]; then
+                if kill -0 "$pid" 2>/dev/null; then
+                    echo " Killing PID $pid"
+                    kill "$pid"
+                else
+                    echo " PID $pid not running"
+                fi
+            fi
+        done < "$pidfile"
+
+        rm -f "$pidfile"
+        echo "Removed $pidfile"
+    done
+    echo "All BatchGBISRunBG_Alt.sh jobs stopped."
+fi
+
 # Kills all MATLAB jobs started with GROUP_IDX (from BatchGBISRunBG.sh)
 echo "Stopping all running MATLAB batch jobs..."
 pkill -f "matlab.*GROUP_IDX="
+echo "All BatchGBISRunBG.sh jobs stopped."
 
 # Check if tmux is running group versions and kill (from BatchGBISRun.sh)
 echo "Stopping tmux sessions starting with 'group'..."
@@ -10,4 +37,5 @@ for s in $(tmux list-sessions -F "#S" 2>/dev/null | grep '^group'); do
     echo "Killed tmux session: $s"
 done
 
-echo "All batch GBIS jobs and associated tmux sessions stopped."
+echo "All batch GBIS jobs with associated tmux sessions stopped."
+echo "All jobs stopped"

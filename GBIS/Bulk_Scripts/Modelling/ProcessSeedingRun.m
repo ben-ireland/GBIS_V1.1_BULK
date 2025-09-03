@@ -9,7 +9,7 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
     if Options.SeedingMethod == 1 % Use a given percentile
         [Per_25_Results, Per_975_Results, Optimal_Results, Mean_Results, ~] = extractPercentilesCustom(SeedFilepath,Options.SeedingBurnin,Options.SeedingCriteria);
     elseif Options.SeedingMethod ==2 % Use a given Std of runs
-        [Per_25_Results, Per_975_Results, Optimal_Results, Mean_Results, ~] = extractStdDevResults(SeedFilepath,Options.SeedingBurnin,Options.SeedingCriteria,)
+        [Per_25_Results, Per_975_Results, Optimal_Results, Mean_Results, ~] = extractStdDevResults(SeedFilepath,Options.SeedingBurnin,Options.SeedingCriteria);
     end
 
     % Load results and determine which source is being used
@@ -90,5 +90,13 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
     InitialRange = abs(modelInput.(ModelName{:}).upper - modelInput.(ModelName{:}).lower);
     NewRange = abs(Per_975_Results(1:numParas) - Per_25_Results(1:numParas));
     BoundReduction = (1-(NewRange./InitialRange)).*100; % Percentage reduction
+
+    % Save seeding stats
+    OldBounds = [modelInput.(ModelName{:}).start; modelInput.(ModelName{:}).lower; modelInput.(ModelName{:}).upper];
+    NewBounds = [Optimal_Results(1:numParas); Per_25_Results(1:numParas); Per_975_Results(1:numParas)];
+
+    Idx = find(SeedFilepath == '/',1,'last');
+    FolderPath = extractBefore(SeedFilepath,SeedFilepath(Idx+1:end));
+    save([FolderPath,'SeedingStats.mat'],"OldBounds","NewBounds","InitialRange","NewRange","BoundReduction");
 
 end

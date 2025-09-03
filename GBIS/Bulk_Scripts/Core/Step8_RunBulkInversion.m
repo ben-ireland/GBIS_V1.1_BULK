@@ -1,5 +1,5 @@
-function OutputFilepaths = Step8_RunBulkInversionV2(InpFilePath,NumFrames,Options)
-
+function OutputFilepaths = Step8_RunBulkInversion(InpFilePath,NumFrames,Options)
+    % Ben Ireland, University of Bristol, August 2025
     % Set up initial arguments
     startDir = pwd;
     if NumFrames>1 
@@ -28,23 +28,26 @@ function OutputFilepaths = Step8_RunBulkInversionV2(InpFilePath,NumFrames,Option
 
                 if k == 1
                     copyfile(InpFile,InpFilePathSeed);
-                else
-                    copyfile(InpFilePathSeed,InpFilePathSeedNew);
                 end
+
+                copyfile(InpFilePathSeed,InpFilePathSeedNew);
 
                 disp(['Seeding run ',num2str(k),' for ' desc])
                 SeedFilepath = GBISrun(InpFilePathSeed,frameArg,'n',code,seedingRuns,Options.skipSimulatedAnnealing);
                 cd(startDir)
+                generateFinalReport2([pwd,SeedFilepath],Options.SeedingBurnin);
+                disp(['Processing seeding run ',num2str(k),' results for ' desc])
                 [InpFilePathSeedNew, BoundReduction] = ProcessSeedingRun(InpFilePathSeedNew,SeedFilepath,Options);
 
                 if mean(BoundReduction) > Options.SeedingTargetReduction
-                    copyfile(InpFilePathSeedNew,InpFile);
-                    disp(['Mean bound reduction of ',num2str(Options.SeedingTargetReduction),' exceeded - moving on to full run'])
+                    if k~=Options.SeedingMaxRuns
+                        copyfile(InpFilePathSeedNew,InpFile);
+                    end
+                    disp(['Mean bound reduction of ',num2str(Options.SeedingTargetReduction),'% exceeded - moving on to full run'])
                     break
                 end
 
                 if k == Options.SeedingMaxRuns
-                    copyfile(InpFilePathSeedNew,InpFile);
                     disp(['All ',num2str(Options.SeedingMaxRuns),' seeding runs complete'])
                     disp(['Mean bound reduction of ',num2str(Options.SeedingTargetReduction),' not reached - moving on to full run'])
                 end
@@ -102,5 +105,19 @@ function OutputFilepaths = Step8_RunBulkInversionV2(InpFilePath,NumFrames,Option
     % Other
     if Options.OtherSource == 1
         OutputFilepaths{end+1} = runModel(InpFilePath,Options.OtherSourceType,strcat('other source type - ',Options.OtherSourceType),Options.nRuns,Options.SeedingnRuns);
+    end
+
+    % Put output filepaths in the correct format
+    if iscell(OutputFilepaths)
+        if length(OutputFilepaths) > 1
+            for k = 1:length(OutputFilepaths)
+                OutputFilepaths{k} = strcat(pwd,OutputFilepaths{k});
+            end
+        else
+            OutputFilepaths{1} = strcat(pwd,OutputFilepaths{1});
+        end
+    else
+        OutputFilepaths = strcat(pwd,OutputFilepaths);
+        OutputFilepaths = {OutputFilepaths};
     end
 end

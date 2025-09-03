@@ -54,8 +54,9 @@ function NewDepthLims = RecalculateDepthBounds(compMask,lat,lon,outputFileName,O
     lat1 = lat(:,1);
 
     f = figure()
-    imagesc(lat1,lon1,compMask)
+    imagesc(lon1,lat1,compMask)
     axis image
+    set(gca,'YDir','normal')
     title('Depth estimates (m) (start | min | max)')
     subtitle([num2str(round(DepthPredStart)), ' | ', num2str(round(DepthPredMin)), ' | ', num2str(round(DepthPredMax))])
     Name = extractBetween(outputFileName,'InputFiles/','.inp');

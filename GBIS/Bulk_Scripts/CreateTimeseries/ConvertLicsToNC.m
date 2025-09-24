@@ -1,7 +1,7 @@
 function filename = ConvertLicsToNC(VolcName,Frame,TS_File)
-VolcName ='Nabro';
-Frame ='014A_07688_131313';
-TS_File = '/Users/jl20461/Library/CloudStorage/OneDrive-UniversityofBristol/Documents/BristolPhD/COMET_InSAR_Training_2022/GBIS_V1.1_Mod4/EAR_Data/LiCSBAS_Nabro/TS_GEOCml1clip/cum_filt.h5';
+% VolcName ='Nabro';
+% Frame ='014A_07688_131313';
+% TS_File = 'LiCSBAS_Nabro/TS_GEOCml1clip/cum_filt.h5';
 
 ImDates = h5read(TS_File,'/imdates');
 DatesDT = datetime(ImDates,'ConvertFrom','yyyymmdd');

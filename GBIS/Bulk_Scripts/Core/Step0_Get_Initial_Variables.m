@@ -375,7 +375,12 @@ caxis([-c c])
 set(gca,'YDir','normal')
 set(h, 'AlphaData', LastStep~=0)
 title(['Frame: ',Frame],'interpreter','none')
-OriginalFigFilename = strcat(pwd,'/OriginalData/',VolcName,'.png');
+
+if Options.CropTS == 1
+    OriginalFigFilename = strcat(pwd,'/OriginalData/',VolcName,'_',num2str(Options.CropTS_start),'_',num2str(Options.CropTS_end),'.png');
+else
+    OriginalFigFilename = strcat(pwd,'/OriginalData/',VolcName,'.png');
+end
 saveas(gcf,OriginalFigFilename)
 
 % Make data square if non-square
@@ -456,6 +461,7 @@ else
     OriginalImgFilename = strcat(pwd,'/OriginalData/',VolcName,'_Image_',num2str(size(LastStep,1)),'x',num2str(size(LastStep,2)),'WithLast.png');
 
 end
+
 save(OriginalDatFilename,'LastStep','lon','lat','head','incidence');
 
 % Shift and normalise values to 0-255 for image

@@ -18,6 +18,8 @@
 %           fixed semi-variogram generation bug
 % 08/2025 - Added options for a 'seeding' run to better constrain apriori
 %           model bounds
+% 09/2025 - Added option for automatic McTigue (1987) spherical source and
+%           additional CDM constraints
 
 %%%%%%%%%%%%%%%% Processing Steps %%%%%%%%%%%%%%%%%%%%
 % This can be run in an automated sense all the way

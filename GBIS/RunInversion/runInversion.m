@@ -492,8 +492,8 @@ while iKeep < invpar.nRuns  % While number of iterations is < than number of run
                     fprintf('CDM Prolate Spheroid centre depth: %f\n',(model.funcOpt{i}(3,:)));
                     fprintf('CDM Prolate Spheroid Z length: %f\n',(model.funcOpt{i}(4,:)));
                     fprintf('CDM Prolate Spheroid Aspect ratio (X/Y = Z*AR): %f\n',(model.funcOpt{i}(5,:)));
-                    fprintf('CDM Prolate Spheroid Trend: %f\n',(model.funcOpt{i}(6,:)));
-                    fprintf('CDM Prolate Spheroid Plunge: %f\n',(model.funcOpt{i}(7,:)));
+                    fprintf('CDM Prolate Spheroid Plunge: %f\n',(model.funcOpt{i}(6,:)));
+                    fprintf('CDM Prolate Spheroid Trend: %f\n',(model.funcOpt{i}(7,:)));
                     fprintf('CDM Prolate Spheroid dV: %f\n',(model.funcOpt{i}(8,:)));
                 elseif invpar.model{i} == 'CDMO'
                     fprintf('CDM Oblate Spheroid X location: %f\n',(model.funcOpt{i}(1,:)));
@@ -501,8 +501,8 @@ while iKeep < invpar.nRuns  % While number of iterations is < than number of run
                     fprintf('CDM Oblate Spheroid centre depth: %f\n',(model.funcOpt{i}(3,:)));
                     fprintf('CDM Oblate Spheroid X length: %f\n',(model.funcOpt{i}(4,:)));
                     fprintf('CDM Oblate Spheroid Aspect ratio (Z = X*AR): %f\n',(model.funcOpt{i}(5,:)));
-                    fprintf('CDM Oblate Spheroid Trend: %f\n',(model.funcOpt{i}(6,:)));
-                    fprintf('CDM Oblate Spheroid Plunge: %f\n',(model.funcOpt{i}(7,:)));
+                    fprintf('CDM Oblate Spheroid Plunge: %f\n',(model.funcOpt{i}(6,:)));
+                    fprintf('CDM Oblate Spheroid Trend: %f\n',(model.funcOpt{i}(7,:)));
                     fprintf('CDM Oblate Spheroid dV: %f\n',(model.funcOpt{i}(8,:)));                                                        
                 end
             end

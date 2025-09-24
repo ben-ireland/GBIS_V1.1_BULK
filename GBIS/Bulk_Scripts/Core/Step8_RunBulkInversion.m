@@ -63,15 +63,22 @@ function OutputFilepaths = Step8_RunBulkInversion(InpFilePath,NumFrames,Options)
     %% Call for individual models
 
     % Mogi
-    OutputFilepaths{end+1} = runModel(InpFilePath,'M','Mogi source',Options.nRuns,Options.SeedingnRuns);
+    if Options.SourceType ==1
+        OutputFilepaths{end+1} = runModel(InpFilePath,'M','Mogi source',Options.nRuns,Options.SeedingnRuns);
+    end
 
     % Penny
     if Options.PennyComparison == 1
         codes = {'P','C','V'};
-        descs = {'Penny source','Sun(1969) source (pressure)','Sun(1969) source (volume)'};
+        descs = {'Penny source','Sun (1969) source (pressure)','Sun (1969) source (volume)'};
         OutputFilepaths{end+1} = runModel(InpFilePath,codes{Options.PennyType},descs{Options.PennyType},Options.nRuns,Options.SeedingnRuns);
     end
 
+     % McTigue
+    if Options.McTigueComparison == 1
+        OutputFilepaths{end+1} = runModel(InpFilePath,'T','McTigue spherical source',Options.nRuns,Options.SeedingnRuns);
+    end
+    
     % Sill
     if Options.SillComparison == 1
         OutputFilepaths{end+1} = runModel(InpFilePath,'S','Okada sill source',Options.nRuns,Options.SeedingnRuns);

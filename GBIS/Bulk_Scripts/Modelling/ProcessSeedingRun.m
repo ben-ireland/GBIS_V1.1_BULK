@@ -30,8 +30,19 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
     fclose(inputFileID);
     outputFileName = InpFilePath;
 
-    % load old and new bounds
-    numParas = length(modelInput.(ModelName{:}).start); % Removes any offsets
+    numParas = length(modelInput.(ModelName{:}).start); % Removes any offsets/ramp parameters
+
+    % Constrain bounds to be within that of the original inversion if they are not
+    for k = 1:numParas
+        if Per_25_Results(k) < modelInput.(ModelName{:}).lower(k)
+            Per_25_Results(k) = modelInput.(ModelName{:}).lower(k);
+        end
+
+        if Per_975_Results(k) > modelInput.(ModelName{:}).upper(k)
+            Per_975_Results(k) = modelInput.(ModelName{:}).upper(k);
+        end
+    end
+
     startStr = vectorToSemicolonString(modelInput.(ModelName{:}).start);
     startBoundStr = vectorToSemicolonString(Optimal_Results(1:numParas));
 
@@ -55,7 +66,8 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
         end
     end
 
-    % Create lower and upper bounds
+    % Create start, lower and upper bounds
+    % load old and new bounds
     lowStr = vectorToSemicolonString(modelInput.(ModelName{:}).lower);
     lowerBoundStr = vectorToSemicolonString(Per_25_Results(1:numParas));
     upperStr = vectorToSemicolonString(modelInput.(ModelName{:}).upper);
@@ -87,7 +99,7 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
     'y', 1);
 
     % Calculate reduction in bound range
-    InitialRange = abs(modelInput.(ModelName{:}).upper - modelInput.(ModelName{:}).lower);
+    InitialRange = abs(modelInput.(ModelName{:}).upper - modelInput.(ModelName{:}).lower)';
     NewRange = abs(Per_975_Results(1:numParas) - Per_25_Results(1:numParas));
     BoundReduction = (1-(NewRange./InitialRange)).*100; % Percentage reduction
 
@@ -97,6 +109,18 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
 
     Idx = find(SeedFilepath == '/',1,'last');
     FolderPath = extractBefore(SeedFilepath,SeedFilepath(Idx+1:end));
-    save([FolderPath,'SeedingStats.mat'],"OldBounds","NewBounds","InitialRange","NewRange","BoundReduction");
+
+    FilenameStart = [FolderPath,'SeedingStats_'];
+    count = 0;
+    for k = 1:Options.SeedingMaxRuns
+        count = count+1;
+        File = [FilenameStart,num2str(count),'.mat'];
+        if exist(File,"file") == 2
+            continue
+        else
+            save(File,"OldBounds","NewBounds","InitialRange","NewRange","BoundReduction");
+            break
+        end
+    end
 
 end

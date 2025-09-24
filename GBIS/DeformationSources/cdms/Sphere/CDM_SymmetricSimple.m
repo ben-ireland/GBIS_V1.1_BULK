@@ -18,8 +18,12 @@ function U = CDM_SymmetricSimple(m,obs,nu)
     az2 = 2*az;
     opening = dv/(ax2*ay2+ax2*az2+ay2*az2);
 
+    % Constrain dv/V (based on chamber compressibility estimates for oblate sources) - See Yip et al. 2024 and Anderson and Segall (2011)
+    V = ax2*ay2*az2; % Chamber volume
+    dvV = dv/V;
+
     Warn = 1;
-    if ax/depth>0.35 & Warn == 1
+    if (az/depth>0.35 || dvV>1e-2) & Warn == 1
         U = [zeros(size(obs,2),1)';zeros(size(obs,2),1)';zeros(size(obs,2),1)'];
     else
         [ue,un,uv,DV]=CDM(X,Y,X0,Y0,depth,omegaX,omegaY,omegaZ,ax,ay,...

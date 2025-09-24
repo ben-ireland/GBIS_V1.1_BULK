@@ -68,6 +68,30 @@ for i = 1:invpar.nModels % For each source model...
         case 'CERP'
             mFunc{i}=invResults.model.optimal(index1:index1+7);
             U = CervelliYangPressure(mFunc{i},xy,nu);  
+        case 'CDMN'   
+            mFunc{i}=invResults.model.optimal(index1:index1+9);
+            U = PrepCDM(mFunc{i},xy,nu); 
+        case 'CDMB'   
+            mFunc{i}=invResults.model.optimal(index1:index1+4);
+            U = CDM_SymmetricSimple(mFunc{i},xy,nu);
+        case 'CDMG'   
+            mFunc{i}=invResults.model.optimal(index1:index1+6);
+            U = CDM_Symmetric(mFunc{i},xy,nu);
+        case 'CDMI'   
+            mFunc{i}=invResults.model.optimal(index1:index1+4);
+            U = CDM_Sill_Symmetric(mFunc{i},xy,nu);
+        case 'CDMJ'   
+            mFunc{i}=invResults.model.optimal(index1:index1+6);
+            U = CDM_Sill(mFunc{i},xy,nu);       
+        case 'CDMK'   
+            mFunc{i}=invResults.model.optimal(index1:index1+6);
+            U = CDM_Dyke(mFunc{i},xy,nu);      
+        case 'CDML'   
+            mFunc{i}=invResults.model.optimal(index1:index1+7);
+            U = CDM_Prolate_Spheroid(mFunc{i},xy,nu);          
+        case 'CDMO'   
+            mFunc{i}=invResults.model.optimal(index1:index1+7);
+            U = CDM_Oblate_Spheroid(mFunc{i},xy,nu); 
     end
     UTot = UTot + U; % Calculate total displacement from sum of displacement from each source
     insarParIx = invResults.model.mIx(end); % Identify first model parameter not related to source model (e.g., offset, ramp, etc.)

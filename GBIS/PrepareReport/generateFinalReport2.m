@@ -172,6 +172,21 @@ for i = 1:nParam-1
     xMin = mean(invResults.mKeep(i,burning:end-blankCells))-4*std(invResults.mKeep(i,burning:end-blankCells));
     xMax = mean(invResults.mKeep(i,burning:end-blankCells))+4*std(invResults.mKeep(i,burning:end-blankCells));
     bins = xMin: (xMax-xMin)/50: xMax;
+    if isempty(bins)
+        plot(NaN, NaN);
+        xlim([0 100])
+        ylim([0 100])
+
+        % Add text in the middle of the axes
+        xCenter = mean(xlim);  % X-axis center
+        yCenter = mean(ylim);  % Y-axis center
+        text(xCenter, yCenter, 'Parameter fixed', ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'middle', ...
+            'FontSize', 10);
+        title(invResults.model.parName(i))
+        continue
+    end
     h = histogram(invResults.mKeep(i,burning:end-blankCells),bins,'EdgeColor','none','Normalization','count');
     hold on
     topLim = max(h.Values);
@@ -192,16 +207,22 @@ fprintf(fidHTML, '<img src="%s" alt="HTML5 Icon">\n', filepath); %Edited
 
 %% Plot joint probabilities
         
-        figure('Position', [1, 1, 1200, 1000]);
-        plotmatrix_lower(invResults.mKeep(1:nParam-1,burning:invpar.nRuns-1)','contour'); %Edited
-        img1 = getframe(gcf);
-        imwrite(img1.cdata,[outputDir,'/','Summary_Figures/',inputFile.name,'/',saveName,'/JointProbabilities.png']); %Edited
-        filepath = [outputDir,'/','Summary_Figures/',inputFile.name,'/',saveName,'/JointProbabilities.png']; %Added
-        
-        % Add image to html report
-        fprintf(fidHTML, '%s\r\n', '<hr>');
-        fprintf(fidHTML, '%s\r\n', '<H3>Joint probabilities</H3>');
-        fprintf(fidHTML, '<img src="%s" alt="HTML5 Icon">\n', filepath); %Edited
+figure('Position', [1, 1, 1200, 1000]);
+try
+    plotmatrix_lower(invResults.mKeep(1:nParam-1,burning:invpar.nRuns-1)','contour'); %Edited
+catch
+    plot(NaN,NaN);
+    title('plotmatrix_lower function crashed')
+    subtitle('Your uncertainties are probably too small')
+end
+img1 = getframe(gcf);
+imwrite(img1.cdata,[outputDir,'/','Summary_Figures/',inputFile.name,'/',saveName,'/JointProbabilities.png']); %Edited
+filepath = [outputDir,'/','Summary_Figures/',inputFile.name,'/',saveName,'/JointProbabilities.png']; %Added
+
+% Add image to html report
+fprintf(fidHTML, '%s\r\n', '<hr>');
+fprintf(fidHTML, '%s\r\n', '<H3>Joint probabilities</H3>');
+fprintf(fidHTML, '<img src="%s" alt="HTML5 Icon">\n', filepath); %Edited
 
 %% Plot comparison betweem data, model, and residual
 

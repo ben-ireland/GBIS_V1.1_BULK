@@ -2,9 +2,9 @@
 # Alternative bash-only script to BatchGBISRunBG.sh (no GNU Parallel needed)
 
 # Number of signals to test
-NUM_GROUPS=3
+NUM_GROUPS=13
 START_NUM=1
-RUN_NAME="MoreFarField"
+RUN_NAME="FullTest_McTGYangCDM"
 OVERWRITE_LOGS=true
 MAX_JOBS=16
 SLEEP_BETWEEN=2
@@ -40,7 +40,7 @@ launch_jobs() {
         (
             export RUN_NAME="$RUN_NAME"
             export GROUP_IDX="$i"
-            matlab -batch "GBIS_BULK_Input_TmuxAuto3" \
+            matlab -batch "GBIS_BULK_Input_TmuxAuto2" \
                 -nodisplay -nosplash -nodesktop \
                 > "logs/${RUN_NAME}_$i.log" 2>&1
         ) &

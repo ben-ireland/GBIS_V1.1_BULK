@@ -12,11 +12,43 @@ clear all; close all;
 %    ,'/home/jl20461/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313PostErupt_Manual/invert_1_2_E/invert_1_2_E_1/invert_1_2_E_1.mat'};
 %load('/home/jl20461/GBIS_V1.1_BULK/Options/0403Erta_Last_PostErupt_Manual_Options.mat');
 
-OutputFilepaths = {'/home/jl20461/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313CoEruptV4/invert_1_2_D_D_D/invert_1_2_D_D_D/invert_1_2_D_D_D.mat'};
-load('/home/jl20461/GBIS_V1.1_BULK/Options/Erta_2802_CoEruptV2_Options.mat');
+% OutputFilepaths = {'/home/jl20461/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313CoEruptV4/invert_1_2_D_D_D/invert_1_2_D_D_D/invert_1_2_D_D_D.mat'};
+% load('/home/jl20461/GBIS_V1.1_BULK/Options/Erta_2802_CoEruptV2_Options.mat');
+
+% OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/dabbahu_hararo_079D_07694_131313Dabbahu_CDMsV3/invert_1_B_B_B_B_J/invert_1_B_B_B_B_J/invert_1_B_B_B_B_J.mat'};
+% load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/1009_Dabbahu_CDMsV3_Options.mat');
+
+% OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs/invert_1_2_M/invert_1_2_M/invert_1_2_M.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs/invert_1_2_O/invert_1_2_O/invert_1_2_O.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs/invert_1_2_L/invert_1_2_L/invert_1_2_L.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs/invert_1_2_K/invert_1_2_K/invert_1_2_K.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs/invert_1_2_J/invert_1_2_J/invert_1_2_J.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs/invert_1_2_I/invert_1_2_I/invert_1_2_I.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs/invert_1_2_B/invert_1_2_B/invert_1_2_B.mat'};
+% load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/0909_Nabr_CDMs_Options.mat');
+
+% OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs_Spheroid/invert_1_2_M/invert_1_2_M/invert_1_2_M.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs_Spheroid/invert_1_2_L/invert_1_2_L/invert_1_2_L.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313Nabr_CDMs_Spheroid/invert_1_2_O/invert_1_2_O/invert_1_2_O.mat'};
+% load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/1209_Nabr_CDMs_Spheroid_Options.mat');
 
 %OutputFilepaths = {'/home/jl20461/GBIS_V1.1_BULK/Inversion_Results/alu-dalafilla_014A_07688_131313_079D_07694_131313YangTest_LastV5/invert_1_2_Y_Y/invert_1_2_Y_Y/invert_1_2_Y_Y.mat'};
 %load('/home/jl20461/GBIS_V1.1_BULK/Options/1402Alu_Last_Two_Yang_YangTest_LastV5_Options.mat');
+
+% OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/dabbahu_hararo_079D_07694_131313Dabbahu_CDMs/invert_1_M/invert_1_M/invert_1_M.mat',...
+%     '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/dabbahu_hararo_079D_07694_131313Dabbahu_CDMsV6/invert_1_B_B_B_B_J/invert_1_B_B_B_B_J/invert_1_B_B_B_B_J.mat'};
+% load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/1209_Dabbahu_CDMsV6_Options.mat');
+
+% OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313Erta_Co_CDM_Moore/invert_1_2_K_K_K/invert_1_2_K_K_K_1/invert_1_2_K_K_K_1.mat'};
+% load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/1009_Erta_Co_CDM_Moore_Options.mat');
+
+% OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313Erta_Pre_CDM_Manual/invert_1_2_K/invert_1_2_K_1/invert_1_2_K_1.mat'};
+% load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/0909_Erta_Pre_CDM_Manual_Options.mat');
+
+OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313Erta_Post_CDM_Spheroid/invert_1_2_M/invert_1_2_M/invert_1_2_M.mat',...
+    '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313Erta_Post_CDM_Spheroid/invert_1_2_L/invert_1_2_L/invert_1_2_L.mat',...
+    '/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/erta_ale_014A_07688_131313_079D_07694_131313Erta_Post_CDM_Spheroid/invert_1_2_O/invert_1_2_O/invert_1_2_O.mat'};
+load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/1209_Erta_Post_CDM_Spheroid_Options.mat');
 
 %OutputFilepaths = {'/home/jl20461/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313YangTest_Uplift/invert_1_2_M/invert_1_2_M/invert_1_2_M.mat'...
 %    '/home/jl20461/GBIS_V1.1_BULK/Inversion_Results/nabro_006D_07728_131313_014A_07688_131313YangTest_Uplift/invert_1_2_S/invert_1_2_S/invert_1_2_S.mat'...,

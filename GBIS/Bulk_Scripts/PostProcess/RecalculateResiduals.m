@@ -3,6 +3,10 @@ function [Data, Model, Residual] = RecalculateResiduals(OutputFilePath)
     Filepath = char(strcat(invResFiles.folder,'/',invResFiles.name));
     load(Filepath);
 
+    % if contains(Filepath,'fentale')
+    %     invResults.model.optimal(6) = invResults.model.optimal(6)-90;
+    % end
+
     for i = 1:length(insar)
         % load downsampled data
         rawData = load(insar{i}.dataPath);

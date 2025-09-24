@@ -107,15 +107,16 @@ clear all;close all
 %     '/scratch/Ben/GBIS_BULK/Inversion_Results/dallol_014A_07524_101303_079D_07502_111213CDMsTest_DallolLastOffset/invert_1_2_O/invert_1_2_O/invert_1_2_O.mat'};
 % load('/scratch/Ben/GBIS_BULK/Options/2207_CDMsTest_DallolLastOffset_Options.mat');
 
-OutputFilepaths = {'/scratch/Ben/GBIS_BULK/Inversion_Results/alu-dalafilla_014A_07688_131313_079D_07694_131313ExtraMaskingTest/invert_1_2_M/invert_1_2_M_1/invert_1_2_M_1.mat'};
-load('/scratch/Ben/GBIS_BULK/Options/2907_ExtraMaskingTest_Options.mat');
+%OutputFilepaths = {'/scratch/Ben/GBIS_BULK/Inversion_Results/alu-dalafilla_014A_07688_131313_079D_07694_131313ExtraMaskingTest/invert_1_2_M/invert_1_2_M_1/invert_1_2_M_1.mat'};
+%load('/scratch/Ben/GBIS_BULK/Options/2907_ExtraMaskingTest_Options.mat');
 
-
+OutputFilepaths = {'/local-scratch/Ben/GBIS_V1.1_BULK/Inversion_Results/alutu_079D_08294_131313McTigueTest/invert_1_T/invert_1_T/invert_1_T.mat'};
+load('/local-scratch/Ben/GBIS_V1.1_BULK/Options/2309_McTigueTest_Options.mat');
 % Set other parameters
 FullTable = [];
 % SINGLE FRAME
-%VolcNames = {'alutu_079D_08294_131313'};
-%VolcName = {'alutu_079D_08294_131313'};
+VolcNames = {'alutu_079D_08294_131313'};
+VolcName = {'alutu_079D_08294_131313'};
 %VolcName = {'corbetti_079D_08294_131313'};
 %VolcNames = {'corbetti_079D_08294_131313'};
 %VolcName = {'dabbahu_hararo_079D_07694_131313'};
@@ -134,8 +135,8 @@ FullTable = [];
 %VolcNames = {'tullu_moje_079D_08094_131313'};
 
 % TWO FRAMES
-VolcNames = {'alu-dalafilla_014A_07688_131313','alu-dalafilla_079D_07694_131313'};
-VolcName = {'alu-dalafilla_014A_07688_131313_079D_07694_131313'};
+%VolcNames = {'alu-dalafilla_014A_07688_131313','alu-dalafilla_079D_07694_131313'};
+%VolcName = {'alu-dalafilla_014A_07688_131313_079D_07694_131313'};
 %VolcNames = {'nabro_006D_07728_131313','nabro_014A_07688_131313'}; % Multiple if a joint inversion?
 %VolcName = {'nabro_006D_07728_131313_014A_07688_131313'};
 %VolcNames = {'suswa_130A_09212_131313','suswa_152D_09114_131313'}; % Multiple if a joint inversion?

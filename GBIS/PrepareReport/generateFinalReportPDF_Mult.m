@@ -352,6 +352,21 @@ for i = 1:nParam-1
     xMin = mean(invResults.mKeep(i,burning:end-blankCells))-4*std(invResults.mKeep(i,burning:end-blankCells));
     xMax = mean(invResults.mKeep(i,burning:end-blankCells))+4*std(invResults.mKeep(i,burning:end-blankCells));
     bins = xMin: (xMax-xMin)/50: xMax;
+    if isempty(bins)
+        plot(NaN, NaN);
+        xlim([0 100])
+        ylim([0 100])
+
+        % Add text in the middle of the axes
+        xCenter = mean(xlim);  % X-axis center
+        yCenter = mean(ylim);  % Y-axis center
+        text(xCenter, yCenter, 'Parameter fixed', ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'middle', ...
+            'FontSize', 10);
+        title(invResults.model.parName(i))
+        continue
+    end
     h = histogram(invResults.mKeep(i,burning:end-blankCells),bins,'EdgeColor','none','Normalization','count');
     hold on
     topLim = max(h.Values);

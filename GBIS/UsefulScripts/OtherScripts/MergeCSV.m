@@ -1,17 +1,16 @@
-Files = dir('/local-scratch/Ben/GBIS_V1.1_BULK/Deformation_Catalogues/*CDMsNew*.csv');
+Files = dir('/local-scratch/Ben/GBIS_V1.1_BULK/Deformation_Catalogues/*All_2stdSpheroids*.csv');
+
+if ~exist([pwd,'/MergedTables'],'dir')
+    mkdir(pwd,'MergedTables')
+    addpath([pwd,'/MergedTables'])
+end
 
 mergedData = [];
 for k = 1:length(Files)
     filename = strcat(Files(k).folder,'/',Files(k).name);
     T = readtable(filename);
 
-    if i == 1
-        % First file: initialize merged table
-        mergedData = T;
-    else
-        % Append data
-        mergedData = [mergedData; T];
-    end
+    mergedData = [mergedData; T];
 end
 
-writetable(mergedData,[pwd,'/MergedTables/DefCatalogue_CDMsV3.csv']);
+writetable(mergedData,[pwd,'/MergedTables/DefCatalogue_All_2stdSpheroids.csv']);

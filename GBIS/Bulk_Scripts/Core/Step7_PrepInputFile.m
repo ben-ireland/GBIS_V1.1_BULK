@@ -112,6 +112,29 @@ function InpFilePath = Step7_PrepInputFile(inputFileName,outputFileName,FineBoun
             end
         end
 
+        if Options.McTigueComparison==1 || (matches(Options.OtherSourceType,'T') && Options.OtherSource ==1)
+            if Options.BoundLimits ==1
+                [Xlims, Ylims] = boundingbox(FineBoundingBox);
+                startBoundsMcT = [round((mean(Xlims)*Options.SpatialRes));round((mean(Ylims)*Options.SpatialRes));Options.McTigueStartDepth;Options.McTigueStartRadius;Options.McTigueStartDPMu]; %
+                lowerBoundsMcT = [round((Xlims(1)*Options.SpatialRes));round((Ylims(1)*Options.SpatialRes));Options.McTigueMinDepth;Options.McTigueMinRadius;Options.McTigueMinDPMu]; 
+                upperBoundsMcT = [round((Xlims(2)*Options.SpatialRes));round((Ylims(2)*Options.SpatialRes));Options.McTigueMaxDepth;Options.McTigueMaxRadius;Options.McTigueMaxDPMu]; 
+            elseif Options.BoundLimits ==2
+                startBoundsMcT = [(MaxCoords/2);(MaxCoords/2);Options.McTigueStartDepth;Options.McTigueStartRadius;Options.McTigueStartDPMu]; %
+                lowerBoundsMcT = [(MaxCoords*0.05);(MaxCoords*0.05);Options.McTigueMinDepth;Options.McTigueMinRadius;Options.McTigueMinDPMu]; 
+                upperBoundsMcT = [(MaxCoords*0.95);(MaxCoords*0.95);Options.McTigueMaxDepth;Options.McTigueMaxRadius;Options.McTigueMaxDPMu]; 
+            end
+
+            if Options.EstimateDepthBounds ==1
+                startBoundsMcT(3) = Options.NewDepthLims(1);
+                lowerBoundsMcT(3) = Options.NewDepthLims(2);
+                upperBoundsMcT(3) = Options.NewDepthLims(3);
+            end
+
+            InpFilePath = modifyInpFile2(InpFilePath, outputFileName, 'modelInput.mctigue.start', ['[',num2str(modelInput.mctigue.start(1)),';',num2str(modelInput.mctigue.start(2)),';',num2str(modelInput.mctigue.start(3)),';',num2str(modelInput.mctigue.start(4)),';',num2str(modelInput.mctigue.start(5)),';]'], ['[',num2str(startBoundsMcT(1)),';',num2str(startBoundsMcT(2)),';',num2str(startBoundsMcT(3)),';',num2str(startBoundsMcT(4)),';',num2str(startBoundsMcT(5)),';]'], 'y',1);
+            InpFilePath = modifyInpFile2(InpFilePath, outputFileName, 'modelInput.mctigue.lower', ['[',num2str(modelInput.mctigue.lower(1)),';',num2str(modelInput.mctigue.lower(2)),';',num2str(modelInput.mctigue.lower(3)),';',num2str(modelInput.mctigue.lower(4)),';',num2str(modelInput.mctigue.lower(5)),';]'], ['[',num2str(lowerBoundsMcT(1)),';',num2str(lowerBoundsMcT(2)),';',num2str(lowerBoundsMcT(3)),';',num2str(lowerBoundsMcT(4)),';',num2str(lowerBoundsMcT(5)),';]'], 'y',1);
+            InpFilePath = modifyInpFile2(InpFilePath, outputFileName, 'modelInput.mctigue.upper', ['[',num2str(modelInput.mctigue.upper(1)),';',num2str(modelInput.mctigue.upper(2)),';',num2str(modelInput.mctigue.upper(3)),';',num2str(modelInput.mctigue.upper(4)),';',num2str(modelInput.mctigue.upper(5)),';]'], ['[',num2str(upperBoundsMcT(1)),';',num2str(upperBoundsMcT(2)),';',num2str(upperBoundsMcT(3)),';',num2str(upperBoundsMcT(4)),';',num2str(upperBoundsMcT(5)),';]'], 'y',1);
+        end
+
         if Options.SillComparison==1 || (matches(Options.OtherSourceType,'S') && Options.OtherSource ==1)
             if Options.BoundLimits ==1
             [Xlims, Ylims] = boundingbox(FineBoundingBox);
@@ -411,9 +434,9 @@ function InpFilePath = Step7_PrepInputFile(inputFileName,outputFileName,FineBoun
                 end
 
                 if Options.EstimateDepthBounds ==1
-                    startBoundsCDML(3) = Options.NewDepthLims(1);
-                    lowerBoundsCDML(3) = Options.NewDepthLims(2);
-                    upperBoundsCDML(3) = Options.NewDepthLims(3);
+                    startBoundsCDMO(3) = Options.NewDepthLims(1);
+                    lowerBoundsCDMO(3) = Options.NewDepthLims(2);
+                    upperBoundsCDMO(3) = Options.NewDepthLims(3);
                 end
 
                 InpFilePath = modifyInpFile2(InpFilePath, outputFileName, 'modelInput.cdmo.start', ['[',num2str(modelInput.cdmo.start(1)),';',num2str(modelInput.cdmo.start(2)),';',num2str(modelInput.cdmo.start(3)),';',num2str(modelInput.cdmo.start(4)),';',num2str(modelInput.cdmo.start(5)),';',num2str(modelInput.cdmo.start(6)),';',num2str(modelInput.cdmo.start(7)),';',num2str(modelInput.cdmo.start(8)),';]'], ['[',num2str(startBoundsCDMO(1)),';',num2str(startBoundsCDMO(2)),';',num2str(startBoundsCDMO(3)),';',num2str(startBoundsCDMO(4)),';',num2str(startBoundsCDMO(5)),';',num2str(startBoundsCDMO(6)),';',num2str(startBoundsCDMO(7)),';',num2str(startBoundsCDMO(8)),';]'], 'y',1);

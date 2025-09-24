@@ -371,7 +371,7 @@ i_cdmo=0;
             model.gaussPrior(index1:index2) = false(nParameters, 1);
             model.modelName(index1:index2) = {['CDML', num2str(i_cdml)]};
             model.parName(index1:index2) = {'CDM X'; 'CDM Y'; 'CDM Depth'; 'Z radius'; 'AspRatio'; ...
-                'Trend'; 'Plunge'; 'dV'};
+                'Plunge'; 'Trend'; 'dV'};
         case 'CDMO'
             i_cdmo = i_cdmo + 1;
             nParameters = 8;
@@ -388,7 +388,7 @@ i_cdmo=0;
             model.gaussPrior(index1:index2) = false(nParameters, 1);
             model.modelName(index1:index2) = {['CDMO', num2str(i_cdmo)]};
             model.parName(index1:index2) = {'CDM X'; 'CDM Y'; 'CDM Depth'; 'X/Y radius'; 'AspRatio'; ...
-                'Trend'; 'Plunge'; 'dV'};
+                'Plunge'; 'Trend'; 'dV'};
                 
         otherwise
             error('Invalid model')

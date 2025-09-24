@@ -256,6 +256,13 @@ for i = 1:length(insar)
 
     saveas(f,[pwd,'/Inversion_Results/',outputDir,'/Figures/Covariance_', name, '.png'])
 
+    f2 = figure()
+    scatter(xy(:,2),xy(:,3),50,diag(insar{i}.invCov))
+    colorbar
+    box on
+    title('Approx. weighting (diag of invCov matrix)')
+    saveas(f2,[pwd,'/Inversion_Results/',outputDir,'/Figures/Weighting_', name, '.png'])
+
     %% ADDED - Find optimal lat and lon values if synthetic values
     OptMethod = 2; % Method for optimal Lat/Lon - 1 = on mid lat/lon | 2 = on max displacement
     if contains(insar{i}.dataPath,'unwrapped_') % Identify if input data is synthetic

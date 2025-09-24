@@ -107,10 +107,10 @@ modelInput.fault.upper = [10000;  10000; 10000;   -0.1;   360;  15000;    10000;
 
 % McTigue 'T'
 %                                X       Y      Z     R   DP/mu
-modelInput.mctigue.start = [ -5000;   3000;  2500; 3500; 1e-03; ];  % starting model
-modelInput.mctigue.step =  [   100;    50;   100;    100;   1e-04; ];  % initial maximium step size
-modelInput.mctigue.lower = [-10000; -20000;   100; 2700;   1e-04; ];  % lower bounds on m
-modelInput.mctigue.upper = [ 15000;  10000; 10000; 4500;    1e3; ];  % upper bounds on m
+modelInput.mctigue.start = [ -5000;   3000;  2500; 3500; 0.001; ];  % starting model
+modelInput.mctigue.step =  [   100;    50;   100;    100;   0.0001; ];  % initial maximium step size
+modelInput.mctigue.lower = [-10000; -20000;   100; 2700;   0.0001; ];  % lower bounds on m
+modelInput.mctigue.upper = [ 15000;  10000; 10000; 4500;    1000; ];  % upper bounds on m
 
 % Penny-shaped crack 'P'
 %                              X       Y      Z     R    DP/mu

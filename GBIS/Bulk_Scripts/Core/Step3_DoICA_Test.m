@@ -11,11 +11,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Mask out data from other volcanoes in the image (optional)
-if Options.MaskVolcs == 1;
-    LastStep2 = LastStep;
+if Options.MaskVolcs == 1
     LastStep(~isnan(LastStep)) = 1;
     LastStep(isnan(LastStep)) = 0;
 end
+LastStep2 = LastStep;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % show the data using ncdisp(;
@@ -60,10 +61,15 @@ if Options.CropTS ==1 || Options.CropImg ==1
     if Options.CropImg ==1
         dimx_space          =   Options.CropImgX;
         dimy_space          =   Options.CropImgY;
+    else
+        dimx_space          =   [1:size(DATA,1)];
+        dimy_space          =   [1:size(DATA,2)];
     end
 
     if Options.CropTS ==1
         time_range          =   [Options.CropTS_start:Options.CropTS_end];
+    else
+        time_range          =   [1:size(DATA,3)];
     end
 else
     dimx_space          =   [1:size(DATA,1)];
@@ -72,6 +78,7 @@ else
 end
 
 TS                  =   DATA(dimy_space,dimx_space,time_range);
+Dates               =   Dates(time_range);
 
 %if Options.IgnoreLastStep ==1
 %    Dates = Dates(time_range(2):time_range(end-1));
@@ -434,7 +441,7 @@ for k   = 1:length(Spatial_pos)
         % Temporal
         % Time Course
         subplot(numel(Spatial_pos)+2, 3, Timecourse_pos(k,:)+3);
-        plot(Dates, squeeze(DATA(pix_y,pix_x,:))./1000,'ko','LineWidth',1,'MarkerFaceColor','k','MarkerSize',2); hold on; 
+        plot(Dates, squeeze(DATA(pix_y,pix_x,1:nifgm))./1000,'ko','LineWidth',1,'MarkerFaceColor','k','MarkerSize',2); hold on; 
         xlim([Dates(1) Dates(numel(Dates))])
         datetick('x','mm/yy','keeplimits')
         xlabel('Month/Year')

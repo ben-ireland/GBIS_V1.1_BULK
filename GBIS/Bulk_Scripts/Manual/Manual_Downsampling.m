@@ -37,6 +37,7 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
     VolcanoName = regexp(VolcName,'\S*(?=_[0-9AD]{4}_)','match');
     nObs_Raw = numel(Phase);
     NaN_Threshold = Options.NaN_Thresh_DS;
+    FineBoundingBox = AOI.pgon;
     for k = 1:length(SS)
         if k ==1 % Stops phase values being overwritten by a vector
             Phase2 = Phase;
@@ -264,17 +265,17 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
         loadedData.Inc = (zeros(size(loadedData.Phase)))+incidence;
 
         %% Manually apply offset
-        if k==1 && Options.Offset ==1
+        if k==1 && Options.PreProcOffset ==1
             % Apply manual offset
             [loadedData.Phase,loadedData.Offset] = RemovePhaseOffset(FineBoundingBox,loadedData);
         end
 
-        if k==2 && Options.Offset ==1
+        if k==2 && Options.PreProcOffset ==1
             loadedData.Offset = loadedData.Offset;
             loadedData.Phase = loadedData.Phase - loadedData.Offset;
         end
 
-        if Options.Offset ==0
+        if Options.PreProcOffset ==0
             loadedData.Offset = [];
         end
         
@@ -285,17 +286,16 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
         Inc = loadedData.Inc;
         Heading = loadedData.Heading;
         Offset = loadedData.Offset;
-        FineBoundingBox = AOI;
         FullPhase = loadedData.FullPhase;
         FullLat = loadedData.FullLat;
         FullLon = loadedData.FullLon;
         
         if k==1
             Filename_Raw = char(strcat(pwd,'/InputData/',VolcanoName{1},'_',Frame,'_',SS_Style,'_',Options.RunID,'_.mat'))
-            save(Filename_Raw,'Lon','Lat','Phase','Inc','Heading','Offset','FineBoundingBox');
+            save(Filename_Raw,'Lon','Lat','Phase','Inc','Heading','Offset','FineBoundingBox','CoarseIdxs','FineIdxs','FullResPhase',"FullResLat","FullResLon");
         elseif k==2
             Filename = char(strcat(pwd,'/InputData/',VolcanoName{1},'_',Frame,'_',SS_Style,'_',Options.RunID,'_.mat'))
-            save(Filename,'Lon','Lat','Phase','Inc','Heading','Offset','FineBoundingBox');
+            save(Filename,'Lon','Lat','Phase','Inc','Heading','Offset','FineBoundingBox','CoarseIdxs','FineIdxs','nObs_SS','nObs_Raw','nObs_SS_Fine','nObs_SS_Coarse','DS_Stats');
         end
         
         

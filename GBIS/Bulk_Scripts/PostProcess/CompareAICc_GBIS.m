@@ -22,6 +22,12 @@ for k = 1:length(invpar.model)
         if contains(modelTypes{i},invpar.model{k},'IgnoreCase',true)
             ModName = modelTypes{i};
         end
+
+        if matches(modelTypes{i},'mctigue') % Special case for McTigue because of how it is named in GBIS
+            if matches('MCTG',invpar.model{k},'IgnoreCase',true)
+                ModName = modelTypes{i};
+            end
+        end
     end
     ModelName = append(ModelName,ModName);
 end

@@ -145,16 +145,21 @@ for m = 1:length(invpar.model)
         % Add NaNs for extra parameters
         Fields = fieldnames(modelInput);
         
-        for i = 2:length(Fields);
+        count = 0;
+        for i = 1:length(Fields)
             Struct = modelInput.(Fields{i});
             if isstruct(Struct)
-                numParas(i-1) = mean(structfun(@numel,Struct));
+                count = count+1;
+                numParas(count) = mean(structfun(@numel,Struct));
             else
-                for j = 1:length(Struct)
-                    Struct1 = Struct{j};
-                    numPara(j) = mean(structfun(@numel,Struct1));
-                    if j==length(Struct)
-                        numParas(i-1) = max(numPara);
+                if iscell(Struct)
+                    count = count +1;
+                    for j = 1:length(Struct)
+                        Struct1 = Struct{j};
+                        numPara(j) = mean(structfun(@numel,Struct1));
+                        if j==length(Struct)
+                            numParas(count) = max(numPara);
+                        end
                     end
                 end
             end

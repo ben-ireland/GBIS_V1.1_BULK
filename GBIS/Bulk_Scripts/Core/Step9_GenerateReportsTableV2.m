@@ -15,6 +15,9 @@ function FullTable = Step9_GenerateReportsTableV2(FullTable,OutputFilepath,NumFr
             [DeltaBIC(k), DeltaBICUnw(k), BestModel{k}] = CompareBIC_GBIS(OutputFilepath{1},OutputFilepath{k});
         elseif length(OutputFilepath)==1 || k==1
             DeltaAIC(k) = NaN;
+            DeltaAICUnw(k) = NaN;
+            DeltaBIC(k) = NaN;
+            DeltaBICUnw(k) = NaN;
             BestModel{k} = 'NA';
         end
     end
@@ -38,7 +41,7 @@ function FullTable = Step9_GenerateReportsTableV2(FullTable,OutputFilepath,NumFr
                 end
             end  
         else
-            Table = CreateDeformationCatalogue(OutputFilepath{1},VolcNames,NumFrames,SignalLocationGBIS{1},Opts{k},DeltaAIC(1),BestModel{1},AspectRatio{1});
+            Table = CreateDeformationCatalogue(OutputFilepath{1},VolcNames,NumFrames,SignalLocationGBIS{1},Opts{k},DeltaAIC(1),DeltaAICUnw(1),DeltaBIC(1),DeltaBICUnw(1),BestModel{1},AspectRatio{1});
         end
 
         disp('Merging new table with previous table')

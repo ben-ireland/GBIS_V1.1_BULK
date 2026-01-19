@@ -26,7 +26,7 @@ function plotInsarUnwrappedRawResidual(xy, los, name)
 % =========================================================================
 % Last update: 8 August, 2018
 %% Patch scattered data for faster plotting
-    edge = round(((min(abs(diff(xy(:,3)))))+1)); % Size of patch set top minumum distance between points %Edited
+    edge = round(((min(abs(diff(xy(:,3)))))+1))/2; % Size of patch set top minumum distance between points %Edited
     if edge < 50
         edge = 50;
     end

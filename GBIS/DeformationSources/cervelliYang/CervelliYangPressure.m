@@ -7,5 +7,15 @@ function U = CervelliYangPressure(m,obs,nu)
     % Shear modulus
     mu = 1;
 
-    [U,~,~,~] = spheroid(m,obs,nu,mu,'Pressure');
+    % Work out the depth of the top edge of the spheroid
+    VertDist = m(1)*cosd(m(3));
+    TopD = m(7) + VertDist;
+
+    Warn = 1;
+    if TopD>0 & Warn == 1
+        warning('Spheroid top is above free-surface, displacement set to zero')
+        U = [zeros(size(obs,2),1)';zeros(size(obs,2),1)';zeros(size(obs,2),1)'];
+    else
+        [U,~,~,~] = spheroid(m,obs,nu,mu,'Pressure');
+    end
 end

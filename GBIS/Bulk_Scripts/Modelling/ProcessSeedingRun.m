@@ -18,6 +18,10 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
     matches = contains(ModelNames,invpar.model,'IgnoreCase',true);
     ModelName = ModelNames(matches);
 
+    if matches(invpar.model,'MCTG')
+        ModelName = 'mctigue';
+    end
+    
     % Load input file
     inputFileID = fopen(InpFilePath, 'r');
     textLine = fgetl(inputFileID); 

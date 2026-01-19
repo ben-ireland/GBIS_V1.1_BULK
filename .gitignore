@@ -4,6 +4,7 @@ GBIS_BULK_INPUT*.m
 *
 
 # Except these key files and folders
+!GBIS-BULK_UserManualV1.0.pdf
 !Generic_Input_File.inp
 !GBIS_BULK_Input.m
 !GBIS_BULK_Input_TmuxAuto.m

@@ -26,7 +26,11 @@ function plotInsarUnwrappedRaw(xy, los, cmap, name)
 % =========================================================================
 % Last update: 8 August, 2018
 %% Patch scattered data for faster plotting
-    edge = round(((min(abs(diff(xy(:,3)))))+1)); % Size of patch set top minumum distance between points %Edited
+    if length(los)>1e6
+        xy = xy(1:10:end,:);
+        los = los(1:10:end);
+    end
+    edge = round(((min(abs(diff(xy(:,3)))))+1))/2; % Size of patch set top minumum distance between points %Edited
     if edge < 50
         edge = 50;
     end

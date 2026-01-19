@@ -77,9 +77,9 @@ DeltaBICWRSS2 = nObs * log(OtherWRSS2 / MogiWRSS2) + ((nParaOther - nParaMogi) *
 DeltaBICRSS = nObs * log(OtherRSS / MogiRSS) + ((nParaOther - nParaMogi) * log(nObs));
 DeltaBICRMSE = nObs * log(OtherRMSE / MogiRMSE) + ((nParaOther - nParaMogi) * log(nObs));
 
-if DeltaBIC > 0
+if DeltaBIC < 0
     BestModel = 'Mogi';
-elseif DeltaBIC < 0
+elseif DeltaBIC > 0
     BestModel = ModelName;
 else
     BestModel = 'Mogi';

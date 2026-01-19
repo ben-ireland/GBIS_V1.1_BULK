@@ -71,6 +71,7 @@ for i=1:numlevels
             % Extract connected components
             BW_Mask = labels==j;
             CC = bwconncomp(BW_Mask,Options.Otsu_RegionConnectivity);
+            AllCCs{i,j} = CC;
             stats = regionprops("table",CC,"Area","ConvexHull");
             stats(stats.Area < Options.Otsu_MinConCompSize,:)=[]; % Delete connected components with less than 100 pixels
             
@@ -79,7 +80,7 @@ for i=1:numlevels
             %LocationMask = LocationMask==1 & LastStep~=0; 
             %TestLOS = mean(LastStep(LocationMask),'omitnan');
             Overlap = [];
-            for k = 1:size(stats,1)
+            for k = 1:size(stats,1) % Loop through each connected component
                 MaskAreaBefore = cell2mat(stats{k,2});
                 MaskAreaBefore = poly2mask(MaskAreaBefore(:,1),MaskAreaBefore(:,2),size(LastStep,1),size(LastStep,2));
                 
@@ -87,28 +88,36 @@ for i=1:numlevels
                     continue
                 end
                 MaskAfter = MaskAreaBefore;
-                MaskAfter(LocationMask==1) = 1;
+                MaskAfter(LocationMask==1) = 1; % Set up binary mask of location estimate
 
+                % Work out which proportion of the connected component overlaps with the location estimate
                 Overlap(k) = 1 - ((sum(MaskAfter(:)) - sum(MaskAreaBefore(:))) / sum(LocationMask(:)));
 
-                if Overlap(k) == 1
+
+                if Overlap(k) == 1 % If it fully overlaps, take this component
                     AvgLOSMask(i,j) = mean(abs(LastStep(MaskAreaBefore==1)),'omitnan');
                     MaskCC{i,j} = MaskAreaBefore;
                     break
                 end
 
-                if k==size(stats,1)
-                    [MaxOverlap, idx] = max(Overlap);
+                FullOverlaps(i,j,k) = Overlap(k);
+                FullMaskBefore(i,j,k) = sum(MaskAreaBefore(:));
+                FullMaskAfter(i,j,k) = sum(MaskAfter(:));
+                FullLocMask(i,j,k) = sum(LocationMask(:));
+                
+                if k==size(stats,1) % After going through all connected components
+                    [MaxOverlap, idx] = max(Overlap); % Find which connected component had the greatest overlap with the location estimate
                     
-                    AllOverlaps(i,j) = MaxOverlap;
+                    AllOverlaps(i,j) = MaxOverlap; % Add this to overlaps from other segments (i) and regions (j)
                     AltMaskAreaBefore = cell2mat(stats{idx,2});
-                    AltMaskAreaBefore = poly2mask(AltMaskAreaBefore(:,1),AltMaskAreaBefore(:,2),size(LastStep,1),size(LastStep,2));
-                    AllAvgLOS(i,j) = mean(abs(LastStep(AltMaskAreaBefore==1)),'omitnan');
-                    AllMaskCC{i,j} = MaskAreaBefore;
+                    AltMaskAreaBefore = poly2mask(AltMaskAreaBefore(:,1),AltMaskAreaBefore(:,2),size(LastStep,1),size(LastStep,2)); % Create mask of this connected component
+                    AllAvgLOS(i,j) = mean(abs(LastStep(AltMaskAreaBefore==1)),'omitnan'); % Work out average LOS within this connected component
+                    AllMaskCC{i,j} = MaskAreaBefore; % Make mask of the connected component
+                    AllMaskCC2{i,j} = AltMaskAreaBefore; % Make mask of the connected component
 
                     disp(['Segment ',num2str(i),'| Class ',num2str(j),'| Overlap: ',num2str(MaxOverlap)])
                     % If no connected components overlap it a lot, set the average disp to zero
-                    if MaxOverlap < Options.Otsu_MaxOverlap
+                    if MaxOverlap < Options.Otsu_MaxOverlap % Check if max overlap is greater than the threshold
                         AvgLOSMask(i,j)=0;
                         MaskCC{i,j} = [];
                     else % If a connected component overlaps >80% of it, take that value for that level and segment
@@ -301,6 +310,7 @@ end
 
         saveas(f,[pwd,'/Bounding_Boxes/',VolcName,'_Segment',num2str(k),'_',num2str(BB_Shape),Extra,'_',Options.RunID,'.png']);
     end
+    save([pwd,'/Bounding_Boxes/',VolcName,'_Steps_',num2str(BB_Shape),Extra,'_',Options.RunID,'.mat'],"LastStepOrig","Image","LastStep","LocationMask","AllOverlaps","AllAvgLOS","largest_component_mask","maskArea","BoundingBox","BoundingBoxMask","BuffDist","AllCCs","AllMaskCC2","AllMaskCC","MaskCC","OptLevel","OptLabel","FullOverlaps","FullLocMask","FullMaskAfter","FullMaskBefore");
     save([pwd,'/Bounding_Boxes/',VolcName,'_BoundingBox_',num2str(BB_Shape),Extra,'_',Options.RunID,'.mat'],"BoundingBox");
     save([pwd,'/Bounding_Boxes/',VolcName,'_RegionShrinkResults_',num2str(BB_Shape),Extra,'_',Options.RunID,'.mat'],"LastStepOrig","LastStep");
     save([pwd,'/Bounding_Boxes/',VolcName,'_Segments_',num2str(BB_Shape),Extra,'_',Options.RunID,'.mat'],"OtsuOutputs");

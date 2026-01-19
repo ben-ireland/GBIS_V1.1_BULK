@@ -88,7 +88,7 @@ input_Filename = 'Generic_Input_File'; % Without .inp extension
 
 % Timeseries filepath - should be in .nc (m) or .h5 LiCS (mm) format
 % Bulk Asc and Dsc doesn't yet work for h5 examples
-TS_Files = dir([pwd,'/SampleData','/**/timeseries/*.nc']); % .nc example (comment out as necessary)
+%TS_Files = dir([pwd,'/SampleData','/**/timeseries/*.nc']); % .nc example (comment out as necessary)
 %TS_Files = dir([pwd,'/SampleData','/**/TS_GEOCml1*/cum_filt.h5']); % .h5 example
 
 %%%%%%%%%%%%%%% Saving and loading runs %%%%%%%%%%%%%%
@@ -106,8 +106,8 @@ Options.WavelengthM = 0.056; % Wavelength of the SAR sensor in m e.g. 0.056 m fo
 
 %Options.RunID = 'CDMsTest_WithLast'; % Unique identifier for the given run (e.g. VOLCANO_NAME_TEST)
 %Options.RunID = 'CDMsTest_FentaleLastOffsetV4';
-Options.RunID = 'FullTest_McTGYangCDM';
-Options.BulkRunID = '2409'; % Unique identifier for summary figures or tables of all runs (e.g. SOURCE_NAME_TEST_0101)
+Options.RunID = 'TEST';
+Options.BulkRunID = '0101'; % Unique identifier for summary figures or tables of all runs (e.g. SOURCE_NAME_TEST_0101)
 
 %%%%%%%%%%%%%%% Optional Parameters %%%%%%%%%%%%%%%%%%%
 %% Options

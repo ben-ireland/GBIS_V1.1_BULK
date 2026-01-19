@@ -64,7 +64,7 @@ los = single(-convertedPhase);                              % Convert to Line-of
 if length(los) > 400000 && length(los) < 1000000
     sampling = 2;
 elseif length(los) > 1000000
-    sampling = 5;
+    sampling = 10;
 else
     sampling = 1;
 end
@@ -86,6 +86,13 @@ colorbar
 %% Identify data outside of Fine Sampling Box
 
 disp('Data outside fine bounding box used')
+
+if length(los) > 1000000
+    disp('Subsampling input data')
+    insarData.Lon = insarData.Lon(1:sampling:end);
+    insarData.Lat = insarData.Lat(1:sampling:end);
+    los = los(1:sampling:end);
+end
 
 in = isinterior(FineBoundingBox,insarData.Lon,insarData.Lat);
 ixSubset = find(in == 0);
@@ -110,6 +117,7 @@ ylabel('Latitude (degrees)')
 colorbar
 
 %% Remove linear trend from subregion
+disp('Removing linear trend from subregion')
 sll = [llon'; llat']';
 xy = llh2local(sll',refPoint);
 xy = xy*1000;
@@ -120,6 +128,7 @@ coeff = lscov(A,subset);
 deramped = subset - A*coeff;
 
 %% Display trend and subregion after removal of trend
+disp('Displaying Variogram pt. 1')
 subplot(2,3,2)
 scatter(llon(:),llat(:),[],mod(A(:,:)*coeff,wavelength/2),'.')
 colormap(cmapSeismo)
@@ -145,6 +154,7 @@ ylabel('Latitude (degrees)')
 colorbar
 
 %% Calculate and display variogram before plane removal
+disp('Displaying Variogram pt. 2')
 subplot(2,3,4)
 variog = variogram(xy',double(subset),'plotit',true,'subsample',3000);
 title('Semi-variogram, NON-DETRENDED')
@@ -153,6 +163,7 @@ title('Semi-variogram, NON-DETRENDED')
 variogDtrnd = variogram(xy',double(deramped),'plotit',false,'subsample',3000,'nrbins',30);
 
 %% Fit exponential function to experimental variogram and display
+disp('Displaying Variogram pt. 3')
 subplot(2,3,5)
 [a,c,n] = variogramfit(variogDtrnd.distance,variogDtrnd.val,20000,1e-04,variogDtrnd.num, 'model', 'exponential', 'nugget', 1);
 title('Semi-variogram and fit, DETRENDED')
@@ -173,6 +184,7 @@ Sill = c;
 Range = a;
 Nugget = n;
 
+disp('Saving output')
 InputFilename = extractAfter(inputFile,'InputData/');
 Filename = [pwd,'/Variograms/',InputFilename(1:end-4),'.png'];
 saveas(f,Filename);

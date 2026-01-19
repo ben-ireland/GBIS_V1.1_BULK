@@ -1,7 +1,7 @@
 function [Fig, RMS] = PlotDMR_UNW_Wrapped(OutputFilePath,Name)
 
 Save = 1;
-Raw = 0;
+Raw = 1;
 if Raw==0
     Pt_Size = 35; % 3 if raw, 35 if DS
 elseif Raw==1
@@ -107,8 +107,8 @@ for i=1:length(insar)
     colormap(cmap); 
     c = max(abs([min(los_raw), max(los_raw)])); % Calculate maximu value for symmetric colormap
     caxis([-c c])
-    caxis([-0.1 0.1])
-    axis square
+    %caxis([-0.1 0.1])
+    axis equal
     xlim([min(ll_raw(:,1)) max(ll_raw(:,1))])
     ylim([min(ll_raw(:,2)) max(ll_raw(:,2))])
     if Raw ==0
@@ -146,8 +146,8 @@ for i=1:length(insar)
     colormap(cmap)
     c = max(abs([min(los_raw), max(los_raw)])); % Calculate maximu value for symmetric colormap
     caxis([-c c])
-    caxis([-0.1 0.1])
-    axis square
+    %caxis([-0.1 0.1])
+    axis equal
     xlim([min(ll_raw(:,1)) max(ll_raw(:,1))])
     ylim([min(ll_raw(:,2)) max(ll_raw(:,2))])
     if Raw ==0
@@ -182,8 +182,8 @@ for i=1:length(insar)
     colormap(cmap); 
     c = max(abs([min(los_raw), max(los_raw)])); % Calculate maximu value for symmetric colormap
     caxis([-c c])
-    caxis([-0.1 0.1])
-    axis square
+    %caxis([-0.1 0.1])
+    axis equal
     xlim([min(ll_raw(:,1)) max(ll_raw(:,1))])
     ylim([min(ll_raw(:,2)) max(ll_raw(:,2))])
     if Raw ==0
@@ -214,7 +214,7 @@ for i=1:length(insar)
 %     subtitle(['RMSE (mm) = ',num2str(1000*RMSERaw,4)],'interpreter','none')
 
     Fig = tl;
-    saveas(Fig,[pwd,'/',Name,num2str(i),'_Unwrapped.png']);
+    %saveas(Fig,[pwd,'/',Name,num2str(i),'_Unwrapped.png']);
 
     %% WRAPPED
     % Convert from m to radians
@@ -242,7 +242,7 @@ for i=1:length(insar)
     %grid on
     %ax.GridLineStyle = '--';
     set(gca,'Color',[0 0 0]);
-    axis square
+    axis equal
     xlim([min(ll_raw(:,1)) max(ll_raw(:,1))])
     ylim([min(ll_raw(:,2)) max(ll_raw(:,2))])
     if Raw ==0
@@ -275,7 +275,7 @@ for i=1:length(insar)
     %grid on
     %ax.GridLineStyle = '--';
     set(gca,'Color',[0 0 0]);
-    axis square
+    axis equal
     xlim([min(ll_raw(:,1)) max(ll_raw(:,1))])
     ylim([min(ll_raw(:,2)) max(ll_raw(:,2))])
     if Raw ==0
@@ -303,7 +303,7 @@ for i=1:length(insar)
     %grid on
     %ax.GridLineStyle = '--';
     set(gca,'Color',[0 0 0]);
-    axis square
+    axis equal
     xlim([min(ll_raw(:,1)) max(ll_raw(:,1))])
     ylim([min(ll_raw(:,2)) max(ll_raw(:,2))])
     if Raw ==0
@@ -326,18 +326,20 @@ for i=1:length(insar)
     
     %set(gca,'XTick',[])
     %set(gca,'YTick',[])
-    Fig = tl;
+    Fig2 = tl;
     if Raw ==1
-        saveas(Fig,[pwd,'/ICA_DMRs/',Name,num2str(i),'_WrappedRaw.png']);
+        saveas(Fig,[pwd,'/Fentale/New/',Name,num2str(i),'_UnwrappedRaw.png']);
+        saveas(Fig2,[pwd,'/Fentale/New/',Name,num2str(i),'_WrappedRaw.png']);
     elseif Raw ==0
-        saveas(Fig,[pwd,'/ICA_DMRs/',Name,num2str(i),'_WrappedDS.png']);
+        saveas(Fig,[pwd,'/Fentale/New/',Name,num2str(i),'_UnwrappedDS.png']);
+        saveas(Fig2,[pwd,'/Fentale/New/',Name,num2str(i),'_WrappedDS.png']);
     end
 
     if Save==1
         if Raw ==1
-            save([pwd,'/ICA_DMRs/',Name,num2str(i),'_DMR_Raw.mat'],"ll_raw",'los_raw','modLosRaw2','ResidualRaw');
+            save([pwd,'/Fentale/New/',Name,num2str(i),'_DMR_Raw.mat'],"ll_raw",'los_raw','modLosRaw2','ResidualRaw');
         else
-            save([pwd,'/ICA_DMRs/',Name,num2str(i),'_DMR_DS.mat'],"ll_raw",'los_raw','modLosRaw2','ResidualRaw','limX','limY');
+            save([pwd,'/Fentale/New/',Name,num2str(i),'_DMR_DS.mat'],"ll_raw",'los_raw','modLosRaw2','ResidualRaw','limX','limY');
         end
     end
 end

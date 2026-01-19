@@ -28,7 +28,7 @@ function plotInsarWrapped(xy, los, wavelength, cmap, name)
 % Last update: 8 August, 2018
 
 %% Patch scattered data for faster plotting
-    edge = round((min(abs(diff(xy(:,3)))))+2)*300; % Size of patch set to minumum distance between points
+    edge = round((min(abs(diff(xy(:,3)))))+2); % Size of patch set to minumum distance between points
     if edge < 50
         edge = 50;
     end

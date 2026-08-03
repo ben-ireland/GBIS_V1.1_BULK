@@ -1,7 +1,7 @@
-function [Fig, RMS] = PlotDMR_UNW_Wrapped(OutputFilePath,Name)
+function [Fig, RMS] = PlotDMR_UNW_WrappedDS(OutputFilePath,Name)
 
 Save = 1;
-Raw = 1;
+Raw = 0;
 if Raw==0
     Pt_Size = 35; % 3 if raw, 35 if DS
 elseif Raw==1

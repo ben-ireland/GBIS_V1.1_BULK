@@ -59,12 +59,14 @@ if endsWith(TS_Files.name,'.nc')
     Frame = regexp(TS_Files.name, '(?<=_)[0-9AD]{4}_[0-9]{5}_[0-9]{6}(?=.nc)','match');
     FrameNum = regexp(Frame,'[1-9]{1}[0-9]{2}(?=[AD])|(?<=0)[0-9]{2}(?=[AD])','match');
 elseif endsWith(TS_Files.name,'.h5')
-    Frame1 = extractAfter(TS_Files.folder,'SampleData/');
-    Frame = extractBetween(Frame1,'/','/TS_GEOC');
+    Frame1 = extractBefore(TS_Files.folder,'/TS_GEO');
+    pos = find(Frame1 == '/', 1, 'last');
+    Frame = extractAfter(Frame1, pos);
     FrameNum = regexp(Frame,'[1-9]{1}[0-9]{2}(?=[AD])|(?<=0)[0-9]{2}(?=[AD])','match');
-    VolcName = extractBefore(Frame1,Frame{1});
-    VolcName = lower(VolcName);
-    VolcName = strcat(VolcName(1:end-1),'_',Frame{1});
+    Frame = {Frame};
+    % VolcName = extractBefore(Frame1,Frame{1});
+    % VolcName = lower(VolcName);
+    % VolcName = strcat(VolcName(1:end-1),'_',Frame{1});
 elseif endsWith(TS_Files.name,'.tif')
     Frame = regexp(TS_Files.name, '(?<=_)[0-9AD]{4}_[0-9]{5}_[0-9]{6}(?=.tif)','match');
     FrameNum = regexp(Frame,'[1-9]{1}[0-9]{2}(?=[AD])|(?<=0)[0-9]{2}(?=[AD])','match');
@@ -373,7 +375,7 @@ c.Label.String = 'LOS Displacement (m)';
 c = 0.1;
 caxis([-c c])
 set(gca,'YDir','normal')
-set(h, 'AlphaData', LastStep~=0)
+set(h, 'AlphaData', LastStep~=0 & ~isnan(LastStep))
 title(['Frame: ',Frame],'interpreter','none')
 
 if Options.CropTS == 1

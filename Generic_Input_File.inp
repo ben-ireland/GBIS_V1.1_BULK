@@ -30,12 +30,12 @@ geo.SS_FactorF = 4;	%The downsampling factor of the fine sampled areas
 geo.QT =0;
 
 %% Optional Parameters
-modelInput.Const.step = 1e-10;
-modelInput.Const.lower = 1e-10;
-modelInput.Const.upper = 1e-10;
-modelInput.Ramp.step = 1e-10;
-modelInput.Ramp.lower = 1e-10;
-modelInput.Ramp.upper = 1e-10;
+modelInput.Const.step = 1e-3;
+modelInput.Const.lower = -1e-1;
+modelInput.Const.upper = 1e-1;
+modelInput.Ramp.step = 0;
+modelInput.Ramp.lower = 0;
+modelInput.Ramp.upper = 0;
 
 %% InSAR data
 % Make sure insarID is unique!

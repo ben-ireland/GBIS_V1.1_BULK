@@ -238,6 +238,7 @@ elseif endsWith(TS_Files.name, '.h5')
     lat = lat'; % Transpose to work with the format of the rest of the script
     FileInfo.StartDate = DatesDT(1);
     FileInfo.Dates = DatesDT;
+    LOS = permute(LOS,[2,1,3]); % For correct format in MATLAB (dimensions of lat,lon,disp)
     LOS = LOS./1000; % Convert LOS from mm to m
 
     if Options.CropTS == 1

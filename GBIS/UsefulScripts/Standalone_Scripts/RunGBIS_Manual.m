@@ -20,6 +20,7 @@ for k = 1:length(modelCode)
     OutputFilepath{k} = [pwd,OutputFile];
     generateFinalReport2(OutputFilepath{k},Burnin);
     cd(StartDir);
+    close all % to save memory
 end
 
 FullTable = [];

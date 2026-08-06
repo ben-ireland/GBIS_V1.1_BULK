@@ -124,7 +124,7 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
                             %Get Phase values
                             area = Phase(i-(NewSS_Factor-1):i,j-(NewSS_Factor-1):j);
                 
-                            if (sum(~isnan(area(:)) & area(:)~=0))/numel(area) > 1-NaN_Threshold
+                            if (sum(~isnan(area(:)) & area(:)~=0))/numel(area) > NaN_Threshold
                                 downsampledImg(LonIdx,LatIdx) = mean(nonzeros(area(:)));
                             else
                                 downsampledImg(LonIdx,LatIdx) = NaN;
@@ -144,7 +144,7 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
                             %Get Phase values
                             area = Phase(i-(NewSS_FactorF-1):i,j-(NewSS_FactorF-1):j);
                 
-                            if (sum(~isnan(area(:)) & area(:)~=0)) > 1-NaN_Threshold
+                            if (sum(~isnan(area(:)) & area(:)~=0))/numel(area) > NaN_Threshold
                                 downsampledImgFine(LonIdx,LatIdx) = mean(nonzeros(area(:)));
                             else
                                 downsampledImgFine(LonIdx,LatIdx) = NaN;

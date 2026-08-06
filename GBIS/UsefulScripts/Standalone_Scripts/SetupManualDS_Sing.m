@@ -6,24 +6,24 @@ close all; clear variables;
 Wavelength_m = 0.0566; % SAR Wavelength in m
 m2rad= (4.*pi)./Wavelength_m;
 rad2m= Wavelength_m./(4.*pi);
-VolcName = {'Suswa_S1_EP2_Dsc'};
+VolcName = {'Suswa_S1_EP1_Asc_V2'};
 
 % Options for manual AOI definition
 MANUAL_Options.Manual_Suffix = '_Volc'; % Check underscore against shapefile name.
 MANUAL_Options.AOIFmt = 'shp';
 
 %load("/scratch/Ben/Suswa_Longonot_Connectivity/Envisat_IFG/Envisat_20040628_20060529_Longonot.mat")
-%load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP1_130A_09212_131313.mat")
-%load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP2_130A_09212_131313.mat")
-%load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP1_152D_09114_131313.mat")
-load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP2_152D_09114_131313.mat")
+load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP1_130A_09212_131313_V2.mat")
+%load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP2_130A_09212_131313_V2.mat")
+%load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP1_152D_09114_131313_V2.mat")
+%load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP2_152D_09114_131313_V2.mat")
 head = Heading(1);
 inc = Inc(1);
 
 % Options for downsampling script
-Options.SS_Factor = 5; % Coarse downsampling factor i.e. anywhere outside the AOI is averaged over every x by x pixels
+Options.SS_Factor = 7; % Coarse downsampling factor i.e. anywhere outside the AOI is averaged over every x by x pixels
 Options.SS_FactorF = 3; % Fine downsampling factor i.e. anywhere inside the AOI is averaged over every x by x pixels
-Options.NaN_Thresh_DS = 0.1; % Proportion of NaN values in an x by x averaged block above which the downsampled pixel is given a NaN value
+Options.NaN_Thresh_DS = 0.1; % Proportion of valid (non-NaN) values in an x by x averaged block below which the downsampled pixel is given a NaN value
 Options.Adjust_SS_Factor = 0; % Automatically adjust the SS_Factors based on the number of pixels if they are outside the ranges below
 Options.SS_RunLimit = 20; % Limit of number of times SS_Factor can be adjusted before taking the result (if Options.Adjust_SS_Factor == 1)
 Options.Min_nPix = 1500; % Minimum number of pixels for a downsampled imaged (if Options.Adjust_SS_Factor == 1)
@@ -45,6 +45,7 @@ Options.VariogramAttempts = 5; % Number of variogram attempts to average over
 MANUAL_AOI{1} = Manual_AOI(VolcName{1},Lat,Lon,MANUAL_Options);
 
 [~, Filename{1}, Filename_Raw{1}, ~, ~, FineBoundingBox, ~, ~] = Standalone_Nested_Uniform_DS(Phase,Lon,Lat,MANUAL_AOI{1},head,inc,VolcName{1},Options);
+keyboard
 
 % Calculate Variogram parameters
 M = Options.VariogramAttempts; % Large enough to get a representative mean
@@ -67,4 +68,6 @@ disp("")
 disp('Average values:')
 disp(['Sill: ',num2str(Sill)])
 disp(['Range: ',num2str(Range)])
-disp(['Range: ',num2str(Nugget)])
+disp(['Nugget: ',num2str(Nugget)])
+
+close all

@@ -4,13 +4,16 @@ function filename = Save_NC_Timeseries(output_name,tscene,daysDT,LON,LAT,Datacub
     % Inputs:
     % output_name - Filename (without extension)
     % tscene - time of each timeseries slice
+    % daysDT - number of days since start of timeseries for each epoch
     % LON/LAT - n x 1 or m x 1 vectors of lon and lat, where n x m is the
-    % spatial dimensions of the image
+    % spatial dimensions of the image - should be in degrees
     % Datacube - 3D n x m x o matrix, giving displacements at n x m spatial
-    % coordinates at o points in time
+    % coordinates at o points in time - should be in lat x lon x time format - displacement should be in metres
     
     filename = strcat(output_name,'.nc');
-    delete(filename)
+    if exist(filename,"file")
+        delete(filename)
+    end
     
     %% Create
     nccreate(filename,'DATA','datatype','single','DeflateLevel',5,'Dimensions',{'lon' length(LON) 'lat' length(LAT) 'time' length(tscene)});
@@ -21,7 +24,7 @@ function filename = Save_NC_Timeseries(output_name,tscene,daysDT,LON,LAT,Datacub
     
     %% write dimensions
     % https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/Dimensions.html
-    DATA=permute(Datacube,[2 1 3]);
+    DATA=permute(Datacube,[2 1 3]); % Change to lon,lat,time format
     
     %Latitude:
     ncwrite(filename,'lat',LAT);
@@ -36,7 +39,7 @@ function filename = Save_NC_Timeseries(output_name,tscene,daysDT,LON,LAT,Datacub
     ncwriteatt(filename, 'lon', 'units', 'degrees');
     ncwriteatt(filename, 'lon', '_CoordinateAxisType', 'Lon');
     % Time:
-    tinit=datestr(tscene(1),'yyyy-mm-dd');
+    tinit=datestr(tscene(1),'yyyy-MM-dd');
     ref_date= ['days since',' ',tinit];
     ncwrite(filename,'time',daysDT);
     ncwriteatt(filename, 'time', 'long_name', 'Time variable');

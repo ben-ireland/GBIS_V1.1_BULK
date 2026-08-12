@@ -38,9 +38,9 @@ end
 
 ResidMogi = [];
 ResidOther = [];
-NewMogiWRSS = 0;
-NewOtherWRSS = 0;
-NewMogiRSSTest = 0;
+%NewMogiWRSS = 0;
+%NewOtherWRSS = 0;
+%NewMogiRSSTest = 0;
 
 for k = 1:length(insar)
     % Append residuals
@@ -52,30 +52,30 @@ for k = 1:length(insar)
     Weights = diag(WeightVals,0);
 
     % Calculate WRSS for each insar dataset
-    NewMogiWRSS = NewMogiWRSS + ResidualMogi{k}' * Weights * ResidualMogi{k};
-    NewOtherWRSS = NewOtherWRSS + ResidualOther{k}' * Weights * ResidualOther{k};
+    %NewMogiWRSS = NewMogiWRSS + ResidualMogi{k}' * Weights * ResidualMogi{k};
+    %NewOtherWRSS = NewOtherWRSS + ResidualOther{k}' * Weights * ResidualOther{k};
 
-    NewMogiRSSTest = NewMogiRSSTest + sum(ResidualMogi{k}.^2);
-    NewMogiRMSETest(k) = sqrt((sum(ResidualMogi{k}.^2))./length(ResidualMogi{k}));
+    %NewMogiRSSTest = NewMogiRSSTest + sum(ResidualMogi{k}.^2);
+    %NewMogiRMSETest(k) = sqrt((sum(ResidualMogi{k}.^2))./length(ResidualMogi{k}));
 end
 
 NewMogiRSS = sum(ResidMogi.^2);
-NewMogiRMSE = sqrt((sum(ResidMogi.^2))./nObs);
+%NewMogiRMSE = sqrt((sum(ResidMogi.^2))./nObs);
 NewOtherRSS = sum(ResidOther.^2);
-NewOtherRMSE = sqrt((sum(ResidOther.^2))./nObs);
+%NewOtherRMSE = sqrt((sum(ResidOther.^2))./nObs);
 
-OtherWRSS2 = NewOtherWRSS;
+%OtherWRSS2 = NewOtherWRSS;
 OtherRSS = NewOtherRSS;
-OtherRMSE = NewOtherRMSE;
-MogiWRSS2 = NewMogiWRSS;
+%OtherRMSE = NewOtherRMSE;
+%MogiWRSS2 = NewMogiWRSS;
 MogiRSS = NewMogiRSS;
-MogiRMSE = NewMogiRMSE;
+%MogiRMSE = NewMogiRMSE;
 
 % Do BIC
 DeltaBIC = nObs * log(OtherWRSS / MogiWRSS) + ((nParaOther - nParaMogi) * log(nObs));
-DeltaBICWRSS2 = nObs * log(OtherWRSS2 / MogiWRSS2) + ((nParaOther - nParaMogi) * log(nObs));
+%DeltaBICWRSS2 = nObs * log(OtherWRSS2 / MogiWRSS2) + ((nParaOther - nParaMogi) * log(nObs));
 DeltaBICRSS = nObs * log(OtherRSS / MogiRSS) + ((nParaOther - nParaMogi) * log(nObs));
-DeltaBICRMSE = nObs * log(OtherRMSE / MogiRMSE) + ((nParaOther - nParaMogi) * log(nObs));
+%DeltaBICRMSE = nObs * log(OtherRMSE / MogiRMSE) + ((nParaOther - nParaMogi) * log(nObs));
 
 if DeltaBIC < 0
     BestModel = 'Mogi';

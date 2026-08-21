@@ -15,11 +15,15 @@ function [InpFilePath,BoundReduction] = ProcessSeedingRun(InpFilePath,SeedFilepa
     % Load results and determine which source is being used
     load(SeedFilepath);
     ModelNames = fieldnames(modelInput);
-    matches = contains(ModelNames,invpar.model,'IgnoreCase',true);
-    ModelName = ModelNames(matches);
+    Modelmatches = contains(ModelNames,invpar.model,'IgnoreCase',true);
+    ModelName = ModelNames(Modelmatches);
+
+    % if iscell(invpar.model)
+    %     invpar.model = invpar.model{1};
+    % end
 
     if matches(invpar.model,'MCTG')
-        ModelName = 'mctigue';
+        ModelName{1} = 'mctigue';
     end
     
     % Load input file

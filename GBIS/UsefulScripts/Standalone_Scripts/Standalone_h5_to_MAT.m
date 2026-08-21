@@ -9,11 +9,23 @@ clear variables; close all;
 % Incidence_deg = 39.5879; % Incidence angle in degrees
 % OutName = 'Suswa_EP1_130A_09212_131313_V2';
 
+%130A_09032_111110
+TS_Files = dir('/scratch/Ben/Suswa_Longonot_Connectivity/LiCSBAS_Outputs/Longonot_S1_130A/TS_GEOCml2mask/cum_filt.h5');
+Heading_deg = -11.992946; % Heading in degrees
+Incidence_deg = 39.6203; % Incidence angle in degrees
+OutName = 'Longonot_130A_09032_111110_V2';
+
 %152D_09114_131313
-TS_Files = dir('/scratch/Ben/Suswa_Longonot_Connectivity/LiCSBAS_Outputs/Suswa_S1_152D/TS_GEOCml2mask/cum_filt.h5');
-Heading_deg = -167.9484; % Heading in degrees
-Incidence_deg = 33.7971; % Incidence angle in degrees
-OutName = 'Suswa_EP2_152D_09114_131313_V2';
+% TS_Files = dir('/scratch/Ben/Suswa_Longonot_Connectivity/LiCSBAS_Outputs/Suswa_S1_152D/TS_GEOCml2mask/cum_filt.h5');
+% Heading_deg = -167.9484; % Heading in degrees
+% Incidence_deg = 33.7971; % Incidence angle in degrees
+% OutName = 'Suswa_EP2_152D_09114_131313_V2';
+
+%152D_09114_131313
+% TS_Files = dir('/scratch/Ben/Suswa_Longonot_Connectivity/LiCSBAS_Outputs/Longonot_S1_152D/TS_GEOCml2mask/cum_filt.h5');
+% Heading_deg = -167.9484; % Heading in degrees
+% Incidence_deg = 33.7971; % Incidence angle in degrees
+% OutName = 'Longonot_152D_09114_131313_V2';
 
 % Options
 Outfolder = '/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat';
@@ -21,8 +33,8 @@ Wavelength_m = 0.0566; % SAR Wavelength in m
 Fig = 1;
 Save = 1;
 Crop = 1;
-CropStart = 70; 
-CropEnd = 126; % 70-126 for dsc, 109-280 for asc
+CropStart = 1; 
+CropEnd = 51; % Suswa - 70-126 for dsc, 109-280 for asc; Longonot - 54 for dsc, 51 for asc
 m2rad= (4.*pi)./Wavelength_m;
 rad2m= Wavelength_m./(4.*pi);
 

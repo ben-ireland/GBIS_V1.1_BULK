@@ -1,8 +1,13 @@
 #!/bin/bash
 
+# Usage stopGBIS_BatchJobs.sh <PIDS_DIR>
+# Directory containing a file Run_Name.pids with all the process IDs for GBIS-BULK runs
+
+PIDS_DIR=$1
 # Kills all MATLAB jobs started with GROUP_IDX (from BatchGBISRunBG_Alt.sh)
 if [ ! -d "$PIDS_DIR" ]; then
     echo "No $PIDS_DIR directory found, nothing to stop."
+    echo $PIDS_DIR
 else
     for pidfile in "$PIDS_DIR"/*.pids; do
         [ -e "$pidfile" ] || continue  # skip if no .pids files
@@ -13,14 +18,16 @@ else
                 if kill -0 "$pid" 2>/dev/null; then
                     echo " Killing PID $pid"
                     kill "$pid"
+                    sleep 5
+                    kill -9 "$pid" 
                 else
                     echo " PID $pid not running"
                 fi
             fi
         done < "$pidfile"
 
-        rm -f "$pidfile"
-        echo "Removed $pidfile"
+        # rm -f "$pidfile"
+        # echo "Removed $pidfile"
     done
     echo "All BatchGBISRunBG_Alt.sh jobs stopped."
 fi

@@ -6,13 +6,13 @@
 DIR="/scratch/Ben/GBIS_BULK/Manual_Inputs/AOI/"
 
 # String to search for inside files
-SEARCH_STRING="Suswa_S1_EP1_Dsc"
+SEARCH_STRING="Longonot_S1"
 
 # Filename pattern to replace
 OLD_PATTERN="Dsc"
 
 # Replacement pattern
-NEW_PATTERN="Dsc_V2"
+NEW_PATTERN="Asc"
 
 find "$DIR" -type f -name "*${SEARCH_STRING}*" | while IFS= read -r file; do
     dir=$(dirname "$file")

@@ -39,8 +39,9 @@ function filename = Save_NC_Timeseries(output_name,tscene,daysDT,LON,LAT,Datacub
     ncwriteatt(filename, 'lon', 'units', 'degrees');
     ncwriteatt(filename, 'lon', '_CoordinateAxisType', 'Lon');
     % Time:
-    tinit=datestr(tscene(1),'yyyy-MM-dd');
-    ref_date= ['days since',' ',tinit];
+    % tinit=datestr(tscene(1),'yyyy-MM-dd');
+    tinit=string(tscene(1));
+    ref_date= strcat('days since',{' '},tinit);
     ncwrite(filename,'time',daysDT);
     ncwriteatt(filename, 'time', 'long_name', 'Time variable');
     ncwriteatt(filename, 'time', 'units', ref_date);

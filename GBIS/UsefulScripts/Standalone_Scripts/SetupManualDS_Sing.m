@@ -6,14 +6,16 @@ close all; clear variables;
 Wavelength_m = 0.0566; % SAR Wavelength in m
 m2rad= (4.*pi)./Wavelength_m;
 rad2m= Wavelength_m./(4.*pi);
-VolcName = {'Suswa_S1_EP1_Asc_V2'};
+VolcName = {'Longonot_S1_Asc'};
 
 % Options for manual AOI definition
 MANUAL_Options.Manual_Suffix = '_Volc'; % Check underscore against shapefile name.
 MANUAL_Options.AOIFmt = 'shp';
 
+load('/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Longonot_130A_09032_111110_V2.mat');
+%load('/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Longonot_152D_09114_131313_V2.mat');
 %load("/scratch/Ben/Suswa_Longonot_Connectivity/Envisat_IFG/Envisat_20040628_20060529_Longonot.mat")
-load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP1_130A_09212_131313_V2.mat")
+%load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP1_130A_09212_131313_V2.mat")
 %load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP2_130A_09212_131313_V2.mat")
 %load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP1_152D_09114_131313_V2.mat")
 %load("/scratch/Ben/Suswa_Longonot_Connectivity/LiCS_TS_mat/Suswa_EP2_152D_09114_131313_V2.mat")
@@ -21,7 +23,7 @@ head = Heading(1);
 inc = Inc(1);
 
 % Options for downsampling script
-Options.SS_Factor = 7; % Coarse downsampling factor i.e. anywhere outside the AOI is averaged over every x by x pixels
+Options.SS_Factor = 5; % Coarse downsampling factor i.e. anywhere outside the AOI is averaged over every x by x pixels
 Options.SS_FactorF = 3; % Fine downsampling factor i.e. anywhere inside the AOI is averaged over every x by x pixels
 Options.NaN_Thresh_DS = 0.1; % Proportion of valid (non-NaN) values in an x by x averaged block below which the downsampled pixel is given a NaN value
 Options.Adjust_SS_Factor = 0; % Automatically adjust the SS_Factors based on the number of pixels if they are outside the ranges below

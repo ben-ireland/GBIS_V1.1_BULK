@@ -1,10 +1,10 @@
-function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask)
+function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cropTime,cohMask,fig)
     % file = '/scratch/Ben/EAR_Data_Portal_json/alu-dalafilla_014A_07688_131313_filt.json';
     % outfolder = '/scratch/Ben/EAR_Data_Portal_json/Coverted_NC';
     % mask = 0;
 
     % Read and decode .json file
-    disp('Loading .json file (slow)')
+    disp('Loading .json file (slow, ~1-2 mins)')
     fid = fopen(file); 
     raw = fread(fid,inf); 
     str = char(raw'); 
@@ -20,12 +20,62 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask)
     LOS = LOS./1000; % Convert from mm (LiCSBAS output) to m (required input)
 
     if mask==1
-        DataMask = data.mask';
+        disp('Applying mask to timeseries')
+        DataMask = data.mask;
+        DataMask(DataMask==0)=1;
+        DataMask(DataMask~=1)=0;
+
         LOS = LOS .* DataMask;
+    else
+        disp('NOT Applying mask to timeseries')
     end
+
+    if cohMask.do ==1
+        disp('Applying average coherence-based masking')
+        disp(['Threshold: ',num2str(cohMask.thresh)])
+        MaskCoh = zeros(size(data.coh));
+        MaskCoh(data.coh > cohMask.thresh)=1;
+
+        LOS = LOS .* MaskCoh;
+
+        if mask==1
+            DataMask = DataMask & MaskCoh;
+        else
+            DataMask = MaskCoh;
+        end
+    else
+        disp('NOT applying average coherence-based masking')
+    end
+
     
     dates = string(data.dates);
     daysDT = time2num((datetime(dates,'InputFormat','yyyy-MM-dd') - datetime(dates(1),'InputFormat','yyyy-MM-dd')),"days");
+
+    if cropTime.do==1
+        disp('Cropping timeseries')
+        StartDate = datetime(string(cropTime.start),'InputFormat','yyyyMMdd');
+        EndDate = datetime(string(cropTime.end),'InputFormat','yyyyMMdd');
+        disp('Requested start date is: ')
+        disp(StartDate)
+        disp('Requested end date is: ')
+        disp(EndDate)
+        
+        % Find closest date to StartDate and EndDate
+        [~, StartDateIdx] = min(abs(time2num((datetime(dates,'InputFormat','yyyy-MM-dd') - StartDate),"days")));
+        [~, EndDateIdx] = min(abs(time2num((datetime(dates,'InputFormat','yyyy-MM-dd') - EndDate),"days")));
+
+        disp('Closest start date is: ')
+        disp(datetime(dates(StartDateIdx),'InputFormat','yyyy-MM-dd'))
+        disp('Closest end date is: ')
+        disp(datetime(dates(EndDateIdx),'InputFormat','yyyy-MM-dd'))
+
+        LOS = LOS(:,:,StartDateIdx:EndDateIdx);
+        dates = dates(StartDateIdx:EndDateIdx);
+        daysDT = daysDT(StartDateIdx:EndDateIdx);
+    else
+        disp('NOT Cropping timeseries')
+    end
+
 
     % Get output name and make output folders if they don't exist
     [~,name,~] = fileparts(file);
@@ -64,15 +114,44 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask)
     geotiffwrite(DEM_Filename,DEM,R);
     
     
-    % f = figure()
-    % imagesc(DEM)
-    % colorbar
-    % axis image
-    % saveas(f,[outfolder,'/Test_DEM.png'])
+    if fig==1
+        disp('Plotting DEM and Cum. Displacement')
+        f = figure();
+        subplot(2,2,1)
+        imagesc(DEM)
+        colorbar
+        axis image
+        subtitle('DEM')
+        set(gca,'XTick',[])
+        set(gca,'YTick',[])
+        set(gca,'YDir','normal')
 
-    % f = figure()
-    % imagesc(LOS(:,:,end))
-    % colorbar
-    % axis image
-    % saveas(f,[outfolder,'/Test.png'])
+        subplot(2,2,2)
+        imagesc(LOS(:,:,end),"AlphaData",LOS(:,:,end)~=0)
+        colorbar
+        axis image
+        subtitle('Cum. LOS Displacement')
+        set(gca,'XTick',[])
+        set(gca,'YTick',[])
+
+        subplot(2,2,3)
+        imagesc(data.coh)
+        colorbar
+        axis image
+        subtitle('Average coherence')
+        set(gca,'XTick',[])
+        set(gca,'YTick',[])
+
+        subplot(2,2,4)
+        imagesc(DataMask)
+        colorbar
+        axis image
+        subtitle('Mask')
+        set(gca,'XTick',[])
+        set(gca,'YTick',[])
+        saveas(f,[OutputBaseFolder,'/Output_Maps.png'])
+
+    else
+        disp('NOT plotting DEM and Cum. Displacement')
+    end
 end

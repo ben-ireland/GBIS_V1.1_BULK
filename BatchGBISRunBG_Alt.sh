@@ -1,5 +1,6 @@
 #!/bin/bash
 # Alternative bash-only script to BatchGBISRunBG.sh (no GNU Parallel needed)
+unset GROUP_IDX
 
 # Number of signals to test
 NUM_GROUPS=13

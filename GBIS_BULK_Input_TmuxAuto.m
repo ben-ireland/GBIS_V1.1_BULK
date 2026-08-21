@@ -785,13 +785,19 @@ for i = 1:length(Loop_nums)
 
         %% Step 5
         if Options.StartStep <= 5 && Options.EndStep >=5
-            % Function call
-            if MANUAL_Options.AOI==1
-                Location = MANUAL_AOI{i,j};
+            [~,~,ext] = fileparts(strcat(TS_Files(Loop_nums{i}(j)).folder,'/',TS_Files(Loop_nums{i}(j)).name));
+            if matches(ext,'.tif') || size(LOS,3)==1
+                disp('Input file is a .tif image not a timeseries, skipping temporal characterisation')
+            else
+                % Function call
+                if MANUAL_Options.AOI==1
+                    Location = MANUAL_AOI{i,j};
+                end
+
+                disp(['Step 5 - Frame ',num2str(j),' out of ', num2str(NumFrames), ' | Bulk run ', num2str(i), ' out of ',num2str(length(Loop_nums))]);
+                Model = Step5_FitTimeseriesFunctions(LOS, Days, FileInfo, Location.pix, VolcName, Options);
             end
 
-            disp(['Step 5 - Frame ',num2str(j),' out of ', num2str(NumFrames), ' | Bulk run ', num2str(i), ' out of ',num2str(length(Loop_nums))]);
-            Model = Step5_FitTimeseriesFunctions(LOS, Days, FileInfo, Location.pix, VolcName, Options);
             if Options.EndStep ==5 && j == NumFrames && i == length(Loop_nums)
                 break
             elseif Options.EndStep ==5

@@ -336,6 +336,7 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
             yticklabels({''})
             set(gca,'XTick',[])
             set(gca,'YTick',[])
+            subtitle(['No. datapoints: ', num2str(length(loadedData.Lon))])
             hold off
             
             FigFilename = strcat(pwd,'/Bounding_Boxes/',VolcName,'_ManualDSFig_',Extra,'.png');

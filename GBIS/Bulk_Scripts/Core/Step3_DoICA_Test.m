@@ -23,8 +23,8 @@ LastStep2 = LastStep;
 if endsWith(TS_File.name,'.nc')
     filename            = strcat(TS_File.folder,'/',TS_File.name);
     DATA                = permute(ncread(filename,'DATA'),[2 1 3])*1000;
-    Lon_alb             = ncread(filename,'lon');
-    Lat_alb             = ncread(filename,'lat');
+    lon             = ncread(filename,'lon');
+    lat             = ncread(filename,'lat');
     Time                = ncread(filename,'time');
     Dates               = datenum('2015-01-10','yyyy-mm-dd') + Time;
 
@@ -38,8 +38,20 @@ elseif endsWith(TS_File.name,'.h5')
     filename            = strcat(TS_File.folder,'/',TS_File.name);
     ImDates             = h5read(filename,'/imdates');
     Dates               = datetime(ImDates,'ConvertFrom','yyyymmdd');
-    DATA                 = h5read(filename,'/cum');
-    DATA                 = DATA./1000; 
+    DATA                = h5read(filename,'/cum');
+    DATA                = DATA./1000; 
+    DATA                = permute(DATA,[2 1 3]);
+    cLat                = h5read(filename,'/corner_lat');
+    cLon                = h5read(filename,'/corner_lon');
+    postLat             = h5read(filename,'/post_lat');
+    postLon             = h5read(filename,'/post_lon');
+
+    endLat = (size(LOS,1)-1)*postLat + cLat;
+    endLon = (size(LOS,1)-1)*postLon + cLon;
+    lat = [cLat:postLat:endLat];
+    lon = [cLon:postLon:endLon];
+    lon = lon';
+    lat = lat';
 
     DATA(isnan(DATA)) = 0;
     % if Options.IgnoreLastStep ==1
@@ -49,6 +61,18 @@ elseif endsWith(TS_File.name,'.h5')
     % end
     FinalStep3 = DATA(:,:,end);
 end
+
+% Correct sizes if data is non-square
+if size(FinalStep3,1) ~= size(FinalStep3,2)
+    [~,~,FinalStep3] = MakeSquare(lon,lat,FinalStep3);
+    for k = 1:size(DATA,3)
+        [~,~,DATA2(:,:,k)] = MakeSquare(lon,lat,DATA(:,:,k));
+    end
+    DATA = DATA2;
+    clear DATA2
+    DATA(isnan(DATA)) = 0;
+end
+
 FinalStep2 = FinalStep3 .* LastStep;
 
 NaNMask = repmat(LastStep,1,1,size(DATA,3));

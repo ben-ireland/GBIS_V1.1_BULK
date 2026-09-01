@@ -104,9 +104,15 @@ function Location = Step2_SlidingWindowClustering(LastStep, VolcName, Options)
     [idx, corePts] = dbscan(Points,Epsilon,minPts);
     [idx2, corePts2] = dbscan(Points2,Epsilon,minPts);
 
-    % Extract bounding box of core points in the cluster with the most observations
-    LocationMask = idx2 == mode(idx2(idx2~=-1)) & corePts2 ==1; % Find core points in largest non-noise cluster
-    Locations = [maxPixelRow(LocationMask)', maxPixelCol(LocationMask)'];
+    if all(idx2==-1)
+        % Edge case where all points come back as noise...take the value from max. pixel area
+        [~, Chosen_Idx] = max(Points2(:,3));
+        Locations = [maxPixelRow(Chosen_Idx)', maxPixelCol(Chosen_Idx)'];
+    else
+        % Extract bounding box of core points in the cluster with the most observations
+        LocationMask = idx2 == mode(idx2(idx2~=-1)) & corePts2 ==1; % Find core points in largest non-noise cluster
+        Locations = [maxPixelRow(LocationMask)', maxPixelCol(LocationMask)'];
+    end
     XLimits = [min(Locations(:,2)), max(Locations(:,2))];
     YLimits = [min(Locations(:,1)), max(Locations(:,1))];
 

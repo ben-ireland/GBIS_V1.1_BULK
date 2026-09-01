@@ -9,7 +9,7 @@ cropTime.start = 20140101; % Format yyyyMMdd
 cropTime.end = 20241201; % Format yyyyMMdd
 
 cohMask.do = 1; % Apply mask based on average coherence (1) or not (0)
-cohMask.thresh = 0.2; % Threshold coherence below which to mask
+cohMask.thresh = 0.3; % Threshold coherence below which to mask
 
 fig = 1; % Plot figures of cumulative displacment?
 

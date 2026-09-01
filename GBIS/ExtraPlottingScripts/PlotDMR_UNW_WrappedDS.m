@@ -106,6 +106,7 @@ for i=1:length(insar)
     scatter(ll_raw(:,1), ll_raw(:,2),Pt_Size,los_raw,'.');
     colormap(cmap); 
     c = max(abs([min(los_raw), max(los_raw)])); % Calculate maximu value for symmetric colormap
+    c = 0.3;
     caxis([-c c])
     %caxis([-0.1 0.1])
     axis equal
@@ -145,6 +146,7 @@ for i=1:length(insar)
     set(gca,'Color',[0.5 0.5 0.5]);
     colormap(cmap)
     c = max(abs([min(los_raw), max(los_raw)])); % Calculate maximu value for symmetric colormap
+    c = 0.3;
     caxis([-c c])
     %caxis([-0.1 0.1])
     axis equal
@@ -181,6 +183,7 @@ for i=1:length(insar)
     scatter(ll_raw(:,1), ll_raw(:,2),Pt_Size,ResidualRaw,'.');
     colormap(cmap); 
     c = max(abs([min(los_raw), max(los_raw)])); % Calculate maximu value for symmetric colormap
+    c = 0.3;
     caxis([-c c])
     %caxis([-0.1 0.1])
     axis equal

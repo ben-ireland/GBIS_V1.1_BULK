@@ -838,10 +838,17 @@ for i = 1:length(Loop_nums)
                 [loadedData, Filename{j}, Filename_Raw{j},nObs_SS, nObs_Raw, BoundingBox, SS_Factor, SS_FactorF] = Manual_Downsampling(DefImg,lon,lat,MANUAL_AOI{i,j},Heading,Incidence,VolcName,Metadata.Frame,SignalLocation,Options);
                 FineBoundingBox = MANUAL_AOI{i,j}.pgon;
             end
-
             if Options.FarFieldMask ==1 && Options.FarFieldUnmaskedVar ==1
                 % Save unmasked file to use to calculate variogram stats in step 7
-                Filename_Raw{j} = Filename_Raw_Unmasked{j};
+                TestData = load(Filename_Raw_Unmasked{j});
+                if sum(~isnan(TestData.Phase))<100
+                    disp('Far-field elevation masking removed too many points, reverting to unmasked data')
+                    disp("Setting Options.FarFieldMask and Options.FarFieldUnmaskedVar to 0")
+                    Options.FarFieldMask =0;
+                    Options.FarFieldUnmaskedVar =0;
+                else
+                    Filename_Raw{j} = Filename_Raw_Unmasked{j};
+                end
             end
 
             if Options.EndStep ==6 && j == NumFrames && i == length(Loop_nums)

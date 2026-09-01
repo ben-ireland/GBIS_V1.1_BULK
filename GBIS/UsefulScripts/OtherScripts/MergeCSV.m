@@ -1,8 +1,8 @@
-Files = dir('/local-scratch/Ben/GBIS_V1.1_BULK/Deformation_Catalogues/*All_2stdSpheroids*.csv');
-
-if ~exist([pwd,'/MergedTables'],'dir')
-    mkdir(pwd,'MergedTables')
-    addpath([pwd,'/MergedTables'])
+Files = dir('/scratch/Ben/GBIS_BULK/Deformation_Catalogues/*__2014_2024New*.csv');
+OutDir = '/scratch/Ben/GBIS_BULK';
+if ~exist([OutDir,'/MergedTables'],'dir')
+    mkdir(OutDir,'MergedTables')
+    addpath([OutDir,'/MergedTables'])
 end
 
 mergedData = [];
@@ -13,4 +13,4 @@ for k = 1:length(Files)
     mergedData = [mergedData; T];
 end
 
-writetable(mergedData,[pwd,'/MergedTables/DefCatalogue_All_2stdSpheroids.csv']);
+writetable(mergedData,[OutDir,'/MergedTables/LiCSVolc_2014_2024.csv']);

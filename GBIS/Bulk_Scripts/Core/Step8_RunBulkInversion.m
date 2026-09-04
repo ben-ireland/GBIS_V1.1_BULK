@@ -34,6 +34,7 @@ function OutputFilepaths = Step8_RunBulkInversion(InpFilePath,NumFrames,Options)
 
                 disp(['Seeding run ',num2str(k),' for ' desc])
                 SeedFilepath = GBISrun(InpFilePathSeed,frameArg,'n',code,seedingRuns,Options.skipSimulatedAnnealing);
+                close all % For memory
                 cd(startDir)
                 generateFinalReport2([pwd,SeedFilepath],Options.SeedingBurnin);
                 disp(['Processing seeding run ',num2str(k),' results for ' desc])
@@ -55,7 +56,7 @@ function OutputFilepaths = Step8_RunBulkInversion(InpFilePath,NumFrames,Options)
         end
         % Full run
         filepathOut = GBISrun(InpFile,frameArg,'n',code,nRuns,Options.skipSimulatedAnnealing);
-        close all
+        close all % For memory
         toc
         cd(startDir)
     end

@@ -700,6 +700,8 @@ for i = 1:length(Loop_nums)
         VolcNames{j} = VolcName;
         disp(['Signal and frame: ',VolcName])
 
+        Options.SpatialRes = GetSpatialRes(lat,lon);
+
         if Options.EndStep == 0
             continue
         end

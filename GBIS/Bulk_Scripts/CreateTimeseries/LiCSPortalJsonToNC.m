@@ -1,4 +1,4 @@
-function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cropTime,cohMask,fig)
+function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cropTime,cropLat,cropLon,cohMask,fig)
     % file = '/scratch/Ben/EAR_Data_Portal_json/alu-dalafilla_014A_07688_131313_filt.json';
     % outfolder = '/scratch/Ben/EAR_Data_Portal_json/Coverted_NC';
     % mask = 0;
@@ -19,10 +19,9 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
     LOS(isnan(LOS))=0; % Convert NaNs to zeros to match required input format
     LOS = LOS./1000; % Convert from mm (LiCSBAS output) to m (required input)
 
+    DataMask = data.mask;
     if mask==1
         disp('Applying mask to timeseries')
-        DataMask = data.mask;
-        DataMask(DataMask==0)=1;
         DataMask(DataMask~=1)=0;
 
         LOS = LOS .* DataMask;
@@ -31,18 +30,33 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
     end
 
     if cohMask.do ==1
-        disp('Applying average coherence-based masking')
-        disp(['Threshold: ',num2str(cohMask.thresh)])
+        disp('Applying coherence-based masking')
+
         MaskCoh = zeros(size(data.coh));
-        MaskCoh(data.coh > cohMask.thresh)=1;
+        if cohMask.type ==1
+            disp('Using scalar threshold:')
+            disp(['Threshold: ',num2str(cohMask.thresh)])
+            MaskCoh(data.coh > cohMask.thresh)=1;
+        elseif cohMask.type ==2
+            disp('Using percentile threshold:')
+            disp(['Threshold: ',num2str(cohMask.thresh)])
+            CohThresh = prctile(data.coh(:),cohMask.thresh);
+            MaskCoh(data.coh > CohThresh)=1;
+        elseif cohMask.type ==3
+            disp('Using percentile threshold with max. limit:')
+            disp(['Threshold: ',num2str(cohMask.thresh)])
+            disp(['Keeping any pixels with coherence >', num2str(cohMask.thresh2)]);
+            CohThresh = prctile(data.coh(:),cohMask.thresh);
+            MaskCoh(data.coh > CohThresh | data.coh >= cohMask.thresh2)=1;
+        end
 
         LOS = LOS .* MaskCoh;
 
-        if mask==1
-            DataMask = DataMask & MaskCoh;
-        else
-            DataMask = MaskCoh;
-        end
+        % if mask==1
+        %     DataMask = DataMask & MaskCoh;
+        % else
+        %     DataMask = MaskCoh;
+        % end
     else
         disp('NOT applying average coherence-based masking')
     end
@@ -51,8 +65,34 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
     dates = string(data.dates);
     daysDT = time2num((datetime(dates,'InputFormat','yyyy-MM-dd') - datetime(dates(1),'InputFormat','yyyy-MM-dd')),"days");
 
+    if cropLat.do==1
+        disp('Cropping timeseries in Lat')
+        StartLat = cropLat.Start;
+        EndLat = cropLat.End;
+        disp('Requested start lat is: ')
+        disp(num2str(StartLat))
+        disp('Requested end lat is: ')
+        disp(num2str(EndLat))
+
+        LatIdxs = lat>=StartLat & lat<=EndLat;
+        LOS = LOS(LatIdxs,:,:);
+    end
+
+    if cropLon.do==1
+        disp('Cropping timeseries in Lon')
+        StartLon = cropLon.Start;
+        EndLon = cropLon.End;
+        disp('Requested start lat is: ')
+        disp(num2str(StartLon))
+        disp('Requested end lat is: ')
+        disp(num2str(EndLon))
+
+        LonIdxs = lon>=StartLat & lon<=EndLat;
+        LOS = LOS(:,LonIdxs,:);
+    end
+
     if cropTime.do==1
-        disp('Cropping timeseries')
+        disp('Cropping timeseries in time')
         StartDate = datetime(string(cropTime.start),'InputFormat','yyyyMMdd');
         EndDate = datetime(string(cropTime.end),'InputFormat','yyyyMMdd');
         disp('Requested start date is: ')
@@ -117,7 +157,7 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
     if fig==1
         disp('Plotting DEM and Cum. Displacement')
         f = figure();
-        subplot(2,2,1)
+        subplot(2,3,1)
         imagesc(DEM)
         colorbar
         axis image
@@ -126,7 +166,7 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
         set(gca,'YTick',[])
         set(gca,'YDir','normal')
 
-        subplot(2,2,2)
+        subplot(2,3,2)
         imagesc(LOS(:,:,end),"AlphaData",LOS(:,:,end)~=0)
         colorbar
         axis image
@@ -134,7 +174,7 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
         set(gca,'XTick',[])
         set(gca,'YTick',[])
 
-        subplot(2,2,3)
+        subplot(2,3,3)
         imagesc(data.coh)
         colorbar
         axis image
@@ -142,13 +182,27 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
         set(gca,'XTick',[])
         set(gca,'YTick',[])
 
-        subplot(2,2,4)
+        subplot(2,3,4)
         imagesc(DataMask)
         colorbar
         axis image
-        subtitle('Mask')
+        if mask==1
+            subtitle('LiCSBAS mask')
+        else
+            subtitle('LiCSBAS mask (not used)')
+        end
         set(gca,'XTick',[])
         set(gca,'YTick',[])
+
+        if cohMask.do==1
+            subplot(2,3,5)
+            imagesc(MaskCoh)
+            colorbar
+            axis image
+            subtitle('Coherence mask')
+            set(gca,'XTick',[])
+            set(gca,'YTick',[])
+        end
         saveas(f,[OutputBaseFolder,'/Output_Maps.png'])
 
     else

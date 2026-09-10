@@ -551,7 +551,7 @@ if Options.ICA ==1
     Phase = double(((4*pi)*LastStepICA)/Options.WavelengthM);
     Phase = -1*Phase;
     %Phase2 = Phase; % Test
-    Phase(LastStep4(:)==0) = 0;
+    Phase(LastStep4(:)==0) = NaN;
     Phase(isnan(LastStep4(:))) = NaN;
 elseif Options.ICA ==0
     % Retain original data if ICA fails

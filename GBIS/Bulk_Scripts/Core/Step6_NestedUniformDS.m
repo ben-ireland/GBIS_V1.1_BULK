@@ -315,7 +315,7 @@ function [loadedData, Filename, Filename_Raw, nObs_SS, nObs_Raw, BoundingBox, Ne
             colormap(ax1,jet)
             c = 0.1;
             caxis([-c c])
-            set(h, 'AlphaData',FullResPhase~=0)
+            set(h, 'AlphaData',FullResPhase~=0 & ~isnan(FullResPhase))
             hold on
         
             plot(FineBoundingBox,"LineStyle","--",FaceAlpha=0,LineWidth=2)

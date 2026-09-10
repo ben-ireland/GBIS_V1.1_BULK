@@ -361,6 +361,10 @@ elseif endsWith(TS_Files.name, '.tif')
     end
 end
 
+% Make zero displacement NaN
+LastStep(LastStep==0) = NaN;
+LOS(LOS==0) = NaN;
+
 % Plot original data
 figure()
 h = imagesc(lon,lat,LastStep);

@@ -36,18 +36,18 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
         if cohMask.type ==1
             disp('Using scalar threshold:')
             disp(['Threshold: ',num2str(cohMask.thresh)])
-            MaskCoh(data.coh > cohMask.thresh)=1;
+            MaskCoh(data.coh > cohMask.thresh & data.coh~=1)=1;
         elseif cohMask.type ==2
             disp('Using percentile threshold:')
             disp(['Threshold: ',num2str(cohMask.thresh)])
             CohThresh = prctile(data.coh(:),cohMask.thresh);
-            MaskCoh(data.coh > CohThresh)=1;
+            MaskCoh(data.coh > CohThresh & data.coh~=1)=1;
         elseif cohMask.type ==3
             disp('Using percentile threshold with max. limit:')
             disp(['Threshold: ',num2str(cohMask.thresh)])
             disp(['Keeping any pixels with coherence >', num2str(cohMask.thresh2)]);
             CohThresh = prctile(data.coh(:),cohMask.thresh);
-            MaskCoh(data.coh > CohThresh | data.coh >= cohMask.thresh2)=1;
+            MaskCoh((data.coh > CohThresh | data.coh >= cohMask.thresh2) & data.coh~=1)=1;
         end
 
         LOS = LOS .* MaskCoh;

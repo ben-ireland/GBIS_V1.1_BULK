@@ -47,7 +47,7 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
             disp(['Threshold: ',num2str(cohMask.thresh)])
             disp(['Keeping any pixels with coherence >', num2str(cohMask.thresh2)]);
             CohThresh = prctile(data.coh(:),cohMask.thresh);
-            MaskCoh((data.coh > CohThresh | data.coh >= cohMask.thresh2) & data.coh~=1)=1;
+            MaskCoh((data.coh > CohThresh | data.coh >= cohMask.thresh2) & data.coh~=1 & data.coh > cohMask.thresh3)=1;
         end
 
         LOS = LOS .* MaskCoh;

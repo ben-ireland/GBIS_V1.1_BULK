@@ -25,6 +25,7 @@ cohMask.do = 1; % Apply additional masking based on coherence
 cohMask.type = 2; % 1 = use a scalar threshold; 2 = remove a threshold percentile of low coherence areas
 cohMask.thresh = 25; % if 1, thresh is between 0-1. if 2, thresh is a percentile 0-100. e.g. 25 will remove pixels with average coherence below 25th percentile of the image
 cohMask.thresh2 = 0.4; % if cohMask.type ==3; make sure cohMask.thresh does not remove pixels with coherence > cohMask.thresh2
+cohMask.thresh3 = 0.2; % if cohMask.type ==3; make sure all pixels with coherence < cohMask.thresh_min are removed
 
 fig = 1; % Plot figures of cumulative displacment?
 

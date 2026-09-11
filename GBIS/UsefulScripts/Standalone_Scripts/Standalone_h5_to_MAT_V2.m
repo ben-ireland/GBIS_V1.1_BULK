@@ -1,4 +1,4 @@
-function Filename = Standalone_h5_to_MAT_V2(TS_Files,Heading_deg,Incidence_deg,OutName,Outfolder,Wavelength_m,Fig,Save,crop)
+function Filename = Standalone_h5_to_MAT_V2(TS_Files,Heading_deg,Incidence_deg,OutName,Outfolder,Wavelength_m,Fig,Save,crop,mask)
     m2rad= (4.*pi)./Wavelength_m;
     rad2m= Wavelength_m./(4.*pi);
 
@@ -26,53 +26,53 @@ function Filename = Standalone_h5_to_MAT_V2(TS_Files,Heading_deg,Incidence_deg,O
         disp('Requested end lat is: ')
         disp(num2str(EndLat))
 
-        LatIdxs = lat>=StartLat & lat<=EndLat;
+        LatIdxs = lat1>=StartLat & lat1<=EndLat;
         LOS = LOS(LatIdxs,:,:);
+        lat1 = lat1(LatIdxs);
     end
 
     if crop.Lon.do==1
         disp('Cropping timeseries in Lon')
         StartLon = crop.Lon.Start;
         EndLon = crop.Lon.End;
-        disp('Requested start lat is: ')
+        disp('Requested start lon is: ')
         disp(num2str(StartLon))
-        disp('Requested end lat is: ')
+        disp('Requested end lon is: ')
         disp(num2str(EndLon))
 
-        LonIdxs = lon>=StartLat & lon<=EndLat;
+        LonIdxs = lon1>=StartLon & lon1<=EndLon;
         LOS = LOS(:,LonIdxs,:);
+        lon1 = lon1(LonIdxs);
     end
 
     if crop.Time.do==1
         disp('Cropping timeseries in time')
-        StartDate = datetime(string(crop.Time.start),'InputFormat','yyyyMMdd');
-        EndDate = datetime(string(crop.Time.end),'InputFormat','yyyyMMdd');
+        StartDate = datetime(string(crop.Time.Start),'InputFormat','yyyyMMdd');
+        EndDate = datetime(string(crop.Time.End),'InputFormat','yyyyMMdd');
         disp('Requested start date is: ')
         disp(StartDate)
         disp('Requested end date is: ')
         disp(EndDate)
         
         % Find closest date to StartDate and EndDate
-        [~, StartDateIdx] = min(abs(time2num((datetime(dates,'InputFormat','yyyy-MM-dd') - StartDate),"days")));
-        [~, EndDateIdx] = min(abs(time2num((datetime(dates,'InputFormat','yyyy-MM-dd') - EndDate),"days")));
+        [~, StartDateIdx] = min(abs(time2num((datetime(DatesDT,'InputFormat','yyyy-MM-dd') - StartDate),"days")));
+        [~, EndDateIdx] = min(abs(time2num((datetime(DatesDT,'InputFormat','yyyy-MM-dd') - EndDate),"days")));
 
         disp('Closest start date is: ')
-        disp(datetime(dates(StartDateIdx),'InputFormat','yyyy-MM-dd'))
+        disp(DatesDT(StartDateIdx))
         disp('Closest end date is: ')
-        disp(datetime(dates(EndDateIdx),'InputFormat','yyyy-MM-dd'))
+        disp(DatesDT(EndDateIdx))
 
         LOS = LOS(:,:,StartDateIdx:EndDateIdx);
-        dates = dates(StartDateIdx:EndDateIdx);
-        daysDT = daysDT(StartDateIdx:EndDateIdx);
     else
         disp('NOT Cropping timeseries')
     end
 
-    % if Crop==1
-    %     Img = LOS(:,:,CropEnd) - LOS(:,:,CropStart);
-    % else
-    %     Img = LOS(:,:,end);
-    % end
+    Img = LOS(:,:,end);
+    if mask.do==1
+        disp(strcat("Masking extreme values - everything above |",num2str(mask.Thresh),"|m"))
+        Img(abs(Img)>(mask.Thresh*1000)) = NaN;
+    end
 
     % Make square if not square
     if size(Img,1) ~= size(Img,2)
@@ -83,18 +83,11 @@ function Filename = Standalone_h5_to_MAT_V2(TS_Files,Heading_deg,Incidence_deg,O
     % Make lat/lon grids
     [lon,lat] = meshgrid(lon1,lat1);
 
-    % lon = lon1.';
-    % lon = repmat(lon,(length(lon)),1);
-    % lat = repmat(lat1,1,(length(lat1)));
-
-    % % Set any NaN values to zero
-    % Img(isnan(Img)) = 0;
-
     % Convert to metres
-    % Img = Img .* rad2m;
     Img = Img / 1000; % Convert to m from mm
     Img = Img .* m2rad; % Convert to radians
     Img = -Img; % GBIS convention - phase is +ive away from satellite
+
 
     if Fig ==1
         f = figure();
@@ -102,6 +95,12 @@ function Filename = Standalone_h5_to_MAT_V2(TS_Files,Heading_deg,Incidence_deg,O
         axis image
         c = colorbar;
         c.Label.String = 'Phase change (radians, +ive away from satellite)';
+        if mask.do==1
+            Val = mask.Thresh * m2rad;
+            clim([-Val Val])
+        else
+            clim([-50 50])
+        end
         set(gca,'YDir','normal')
         saveas(f,strcat(Outfolder,"/",OutName,".png"))
     end
@@ -113,8 +112,23 @@ function Filename = Standalone_h5_to_MAT_V2(TS_Files,Heading_deg,Incidence_deg,O
     Heading = zeros(size(Phase)) + Heading_deg;
     Inc = zeros(size(Phase)) + Incidence_deg;
     Filename = strcat(Outfolder,'/',OutName,'.mat');
+    Filename2 = strcat(Outfolder,'/',OutName,'.txt');
     if Save==1
-        save(strcat(Outfolder,'/',OutName,'.mat'),"Phase","Lat","Lon","Heading","Inc");
+        save(Filename,"Phase","Lat","Lon","Heading","Inc");
+        fid = fopen(Filename2,'wt');
+        fprintf(fid, 'crop.Lat.do = %d\n', crop.Lat.do); 
+        fprintf(fid, 'crop.Lat.Start = %.2f\n', crop.Lat.Start);
+        fprintf(fid, 'crop.Lat.End = %.2f\n\n', crop.Lat.End); 
+        fprintf(fid, 'crop.Lon.do = %d\n', crop.Lon.do); 
+        fprintf(fid, 'crop.Lon.Start = %.2f\n', crop.Lon.Start); 
+        fprintf(fid, 'crop.Lon.End = %.2f\n\n', crop.Lon.End); 
+        fprintf(fid, 'crop.Time.do = %d\n', crop.Time.do); 
+        fprintf(fid, 'crop.Time.Start = %d\n', crop.Time.Start); 
+        fprintf(fid, 'crop.Time.End = %d\n\n', crop.Time.End); 
+        fprintf(fid, 'mask.do = %d\n', mask.do); 
+        fprintf(fid, 'mask.Thresh = %.2f\n', mask.Thresh);
+        fclose(fid);
     end
 
     close all
+end

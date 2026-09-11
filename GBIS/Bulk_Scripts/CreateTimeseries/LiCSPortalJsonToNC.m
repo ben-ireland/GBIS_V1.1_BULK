@@ -82,12 +82,12 @@ function [NC_filename, DEM_Filename] = LiCSPortalJsonToNC(file,outfolder,mask,cr
         disp('Cropping timeseries in Lon')
         StartLon = cropLon.Start;
         EndLon = cropLon.End;
-        disp('Requested start lat is: ')
+        disp('Requested start lon is: ')
         disp(num2str(StartLon))
-        disp('Requested end lat is: ')
+        disp('Requested end lon is: ')
         disp(num2str(EndLon))
 
-        LonIdxs = lon>=StartLat & lon<=EndLat;
+        LonIdxs = lon>=StartLon & lon<=EndLon;
         LOS = LOS(:,LonIdxs,:);
     end
 

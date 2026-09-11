@@ -1,5 +1,5 @@
-Files = dir('/scratch/Ben/GBIS_BULK/Deformation_Catalogues/*__2014_2024New*.csv');
-OutDir = '/scratch/Ben/GBIS_BULK';
+Files = dir('/local-scratch/Ben/GBIS_Sept26/GBIS_V1.1_BULK/Deformation_Catalogues/*__2014_2024*.csv');
+OutDir = '/local-scratch/Ben/GBIS_Sept26/GBIS_V1.1_BULK';
 if ~exist([OutDir,'/MergedTables'],'dir')
     mkdir(OutDir,'MergedTables')
     addpath([OutDir,'/MergedTables'])

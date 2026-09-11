@@ -43,14 +43,13 @@ else
     Dates = FileInfo.Dates;
     StartDate = FileInfo.StartDate;
 end
-
 LastStep = squeeze(LOS(:,:,end));
 LastStep(LastStep==0)=NaN;
 subplot(1,3,1)
 h = imagesc(squeeze(LOS(:,:,end)))
 set(h, 'AlphaData', ~isnan(LastStep))
 title(['Signal Location (x,y): (',num2str(SignalLocation(2)),', ',num2str(SignalLocation(1)),')'])
-axis square
+axis image
 colormap jet
 C = colorbar("Location","westoutside")
 C.Label.String = 'LOS Displacement (m)'
@@ -63,7 +62,7 @@ hold off
 %% Fit a linear trendline and compute the RSS: (f(x) = ax)
 LinearFit = fitlm(days,TS,'Intercept',true);
 subplot(1,3,2)
-plot(LinearFit)
+p = plot(LinearFit);
 title('Linear Fit')
 subtitle(['RSS = ',num2str(LinearFit.SSE)]);
 axis square
@@ -131,6 +130,18 @@ Model.DispRateCM = [];
 Model.Notes = 'None';
 Model.Flag = 0;
 Model.Figure = [];
+Model.SigRSS = SigRSS;
+Model.LinRSS = LinRSS;
+Model.SigP = SigParams;
+Model.LinP = LinParams;
+Model.Data = TS;
+Model.nObs = nObs;
+Model.Linear = LinearFit;
+Model.Sigmoid = U_fit;
+Model.DefData = LastStep;
+Model.Days = days;
+Model.Dates = Dates;
+Model.SigParas = fitParams;
 
 %% Check R2 values
 LinAdjR2 = LinearFit.Rsquared.Adjusted;
@@ -158,14 +169,21 @@ else
 
 %% Compute the delta AIC to work out the preferred model if needed
 % Negative, sigmoid preferred; positive, linear preferred
-    Model.AIC = nObs*(log(SigRSS/LinRSS)) + (2*SigParams - 2*LinParams);
+    if matches(Options.Temp_Metric,'BIC')
+        % Keeping variable name as AIC for consistency with later scripts
+        Model.AIC = nObs * log(SigRSS / LinRSS) + ((SigParams - LinParams)*log(nObs));
+    elseif matches(Options.Temp_Metric,'AIC')
+        Model.AIC = nObs*(log(SigRSS/LinRSS)) + (2*SigParams - 2*LinParams);
+    else
+        error('Value for Options.Temp_Metric wrong - should be ''AIC'' or ''BIC''')
+    end
 end
 
 %% Collate and output characteristics of the signals, including start and
 % end time steps for sigmoidal trending signals
 % Initialise model structure
 
-if Model.AIC <-10 % Sigmoid preferred
+if Model.AIC <-Options.Temp_AIC_Thresh % Sigmoid preferred
     % Derive unrest time period, start time, centre time (Tc), max displacement
     Model.Type = 'Sigmoid';
     Model.R2 = SigAdjR2;
@@ -198,10 +216,10 @@ if Model.AIC <-10 % Sigmoid preferred
     Model.StartDateIdx = Dates(Model.StartIdx);
     Model.EndDateIdx = Dates(Model.EndIdx);
 
-elseif Model.AIC >=-10 % Linear preferred
+elseif Model.AIC >=-Options.Temp_AIC_Thresh % Linear preferred
     Model.Type = 'Linear';
 
-    if Model.AIC >-10 && Model.AIC <10 % Add a flag if the model fits were close to equal AIC
+    if Model.AIC >-Options.Temp_AIC_Thresh && Model.AIC <Options.Temp_AIC_Thresh % Add a flag if the model fits were close to equal AIC
         Model.Notes = '|AIC| <10';
     end
     % Derive average displacement rate and b (uncertainty decay rate)
@@ -242,6 +260,6 @@ elseif Model.Flag ==1
     saveas(gcf,TempFilename);
     TempFilename2 = strcat(pwd,'/Temporal_Parameters/','TempPara_',Name,'.mat');
     save(TempFilename2,'Model','-mat');
-    Model.Figure = gcf;
 end
+Model.Figure = gcf;
 end

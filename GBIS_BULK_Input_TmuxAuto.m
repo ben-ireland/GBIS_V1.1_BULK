@@ -204,7 +204,8 @@ Options.Otsu_Buffer_Large = 1; % Number of pixels to buffer large Otsu regions (
 %% Temporal parameter extraction (Step 5)
 % Fit functions to the timeseries (step 5)
 Options.Temp_R2_Thresh = 0.5; % R2 threshold for function fits above which the function can be considered
-
+Options.Temp_Metric = 'BIC'; % Metric to use to compare function fits ('AIC'/'BIC' - Akaike Information Criterion or Bayesian Information Criterion)
+Options.Temp_AIC_Thresh = 50; % Threshold for delta AIC/BIC above which two models are thought to have significantly different fits
 %% Data Downsampling (Step 6)
 % Downsampled the data using a nested uniform approach based on bounding boxes 
 % and prepare in GBIS format (step 6)
